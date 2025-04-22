@@ -1,0 +1,76 @@
+<div class="sidebar" id="sidebar">
+    <ul class="nav flex-column">
+        <?php
+        // Obtenemos el rol del usuario usando la sintaxis auxiliar
+        $role = session("role");
+        ?>
+
+        <!-- Inicio - Visible para todos -->
+        <li class="nav-item">
+            <a class="nav-link <?= current_url() == base_url('dashboard') ? 'active' : '' ?>"
+                href="<?= base_url('dashboard') ?>" data-title="Inicio" title="Inicio">
+                <i class="fas fa-home"></i>
+                <span class="nav-text">Inicio</span>
+            </a>
+        </li>
+
+        <!-- Sección de Usuarios - Solo visible para administradores -->
+        <?php if ($role === 'admin'): ?>
+            <li class="nav-item">
+                <a class="nav-link has-submenu" href="#" data-title="Usuarios" title="Usuarios">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-text">Usuarios</span>
+                </a>
+                <ul class="submenu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('admin/users') ?>" data-title="Todos los usuarios"
+                            title="Todos los usuarios">
+                            <i class="fa-solid fa-users-rays"></i>
+                            <span class="nav-text">Todos los usuarios</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- Gestionar Asistencias - Solo visible para administradores -->
+            <li class="nav-item">
+                <a class="nav-link" href="<?= site_url('admin/attendances') ?>" data-title="Gestionar Asistencias"
+                    title="Gestionar Asistencias">
+                    <i class="fa-solid fa-bars-progress"></i>
+                    <span class="nav-text">Gestionar Asistencias</span>
+                </a>
+            </li>
+
+        <?php elseif ($role === 'user'): ?>
+            <!-- Registrar Asistencia - Visible para todos -->
+            <li class="nav-item">
+                <a class="nav-link" href="<?= site_url('user') ?>" data-title="Registrar Asistencia"
+                    title="Registrar Asistencia">
+                    <i class="fa-solid fa-earth-asia"></i>
+                    <span class="nav-text">Registrar Asistencia</span>
+                </a>
+            </li>
+
+            <!-- Mis Asistencias - Visible para todos -->
+            <li class="nav-item">
+                <a class="nav-link" href="<?= site_url('user/attendances') ?>" data-title="Mis Asistencias"
+                    title="Mis Asistencias">
+                    <i class="fa-solid fa-user-tie"></i>
+                    <span class="nav-text">Mis Asistencias</span>
+                </a>
+            </li>
+
+        <?php endif; ?>
+
+        <hr>
+
+        <!-- Cerrar Sesión - Visible para todos -->
+        <li class="nav-item">
+            <a class="nav-link border border-danger" href="<?= site_url('logout') ?>" data-title="Cerrar Sesión"
+                title="Cerrar Sesión">
+                <i class="fa-solid fa-arrow-right-from-bracket text-danger"></i>
+                <span class="nav-text">Cerrar Sesión</span>
+            </a>
+        </li>
+    </ul>
+</div>
