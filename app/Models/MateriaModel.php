@@ -43,41 +43,58 @@ class MateriaModel extends Model
     protected $afterFind = [];
     protected $beforeDelete = [];
     protected $afterDelete = [];
-
-    // Obtener materias con sus relaciones
-    public function getMateriaWithRelations($materia_id)
+    public function getMateriaWithRelations($materia_id, $usuario_id)
     {
-        $materia = $this->find($materia_id);
+        try {
+            // Verificar existencia de la materia
+            $materia = $this->where('materia_id', $materia_id)
+                ->where('usuario_id', $usuario_id)
+                ->first();
 
-        if (!$materia) {
-            return null;
+            if (!$materia) {
+                throw new \Exception("No se encontró la materia con ID $materia_id para el usuario ID $usuario_id");
+            }
+
+            // Objetivos con resultados
+            $builder = $this->db->table('objetivos');
+            $materia['objetivos'] = $builder->select('objetivos.*, resultados.descripcion as resultado')
+                ->join('resultados', 'resultados.objetivo_id = objetivos.objetivo_id', 'left')
+                ->where('objetivos.materia_id', $materia_id)
+                ->orderBy('objetivos.numero_objetivo')
+                ->get()
+                ->getResultArray();
+
+            // Unidades con temas
+            $builder = $this->db->table('unidades');
+            $unidades = $builder->where('materia_id', $materia_id)
+                ->orderBy('numero_unidad')
+                ->get()
+                ->getResultArray();
+
+            foreach ($unidades as &$unidad) {
+                $builder = $this->db->table('temas');
+                $unidad['temas'] = $builder->where('unidad_id', $unidad['unidad_id'])
+                    ->orderBy('numero_tema')
+                    ->get()
+                    ->getResultArray();
+            }
+
+            $materia['unidades'] = $unidades;
+
+            // Bibliografía
+            $builder = $this->db->table('bibliografias');
+            $materia['bibliografias'] = $builder->where('materia_id', $materia_id)
+                ->get()
+                ->getResultArray();
+
+            return $materia;
+
+        } catch (\Throwable $e) {
+            // Registrar el error exacto
+            log_message('error', 'Error en getMateriaWithRelations: ' . $e->getMessage());
+            throw $e; // Lanza el error con el mensaje original para verlo en el controlador o pantalla en entorno de desarrollo
         }
-
-        // Obtener objetivos con sus resultados
-        $builder = $this->db->table('objetivos');
-        $materia['objetivos'] = $builder->select('objetivos.*, resultados.descripcion as resultado')
-            ->join('resultados', 'resultados.objetivo_id = objetivos.objetivo_id', 'left')
-            ->where('objetivos.materia_id', $materia_id)
-            ->orderBy('objetivos.numero_objetivo')
-            ->get()
-            ->getResultArray();
-
-        // Obtener unidades con sus temas
-        $builder = $this->db->table('unidades');
-        $materia['unidades'] = $builder->select('unidades.*, temas.nombre as tema_nombre, temas.numero_tema')
-            ->join('temas', 'temas.unidad_id = unidades.unidad_id', 'left')
-            ->where('unidades.materia_id', $materia_id)
-            ->orderBy('unidades.numero_unidad')
-            ->orderBy('temas.numero_tema')
-            ->get()
-            ->getResultArray();
-
-        // Obtener bibliografías
-        $builder = $this->db->table('bibliografias');
-        $materia['bibliografias'] = $builder->where('materia_id', $materia_id)
-            ->get()
-            ->getResultArray();
-
-        return $materia;
     }
+
+
 }

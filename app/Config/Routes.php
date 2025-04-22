@@ -14,6 +14,7 @@ $routes->get('logout', 'Auth\LoginController::logout');
 
 // Rutas protegidas
 $routes->get('dashboard', 'DashboardController::index');
+$routes->get('materias/generar-word/(:num)', 'MateriasController::generarWord/$1');
 // ADMIN
 $routes->group('admin', static function ($routes) {
     $routes->get('/', 'Admin\AdminController::index');
