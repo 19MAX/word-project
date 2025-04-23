@@ -43,7 +43,7 @@ class MateriasController extends BaseController
      */
     public function index()
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
         $data = [
             'title' => 'Mis Materias',
             'materias' => $this->materiaModel->where('usuario_id', $usuarioId)->findAll()
@@ -57,7 +57,7 @@ class MateriasController extends BaseController
      */
     public function listar()
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         $draw = $this->request->getPost('draw');
         $start = $this->request->getPost('start');
@@ -105,7 +105,7 @@ class MateriasController extends BaseController
             'nombre' => $nombre,
             'ciclo' => $ciclo,
             'descripcion' => $descripcion,
-            'usuario_id' => 2 // Asegúrate de manejar correctamente el ID del usuario
+            'usuario_id' => session("user_id"), // Asegúrate de manejar correctamente el ID del usuario
         ];
 
         try {
@@ -159,7 +159,7 @@ class MateriasController extends BaseController
 
     public function editar($id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
         $materia = $this->materiaModel->where('materia_id', $id)
             ->where('usuario_id', $usuarioId)
             ->first();
@@ -247,7 +247,7 @@ class MateriasController extends BaseController
     {
         try {
             // Verificar si existe la materia
-            $usuarioId = 2; // Asegúrate de manejar correctamente el ID del usuario
+            $usuarioId = session("user_id"); // Asegúrate de manejar correctamente el ID del usuario
             $materia = $this->materiaModel->where('materia_id', $id)
                 ->where('usuario_id', $usuarioId)
                 ->first();
@@ -290,7 +290,7 @@ class MateriasController extends BaseController
 
     public function ver($id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
         $materia = $this->materiaModel->getMateriaWithRelations($id, $usuarioId);
 
         if (!$materia) {
@@ -311,7 +311,7 @@ class MateriasController extends BaseController
 
     public function objetivos($materia_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         // Verificar que la materia pertenece al usuario
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -332,7 +332,7 @@ class MateriasController extends BaseController
 
     public function nuevoObjetivo($materia_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
@@ -367,7 +367,7 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -454,7 +454,7 @@ class MateriasController extends BaseController
      */
     public function editarObjetivo($materia_id, $objetivo_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         // Verificar que la materia pertenece al usuario
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -496,7 +496,7 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -618,7 +618,7 @@ class MateriasController extends BaseController
     public function eliminarObjetivo($materia_id, $objetivo_id)
     {
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -667,7 +667,7 @@ class MateriasController extends BaseController
      */
     public function unidades($materia_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
@@ -687,7 +687,7 @@ class MateriasController extends BaseController
 
     public function nuevaUnidad($materia_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
@@ -712,7 +712,7 @@ class MateriasController extends BaseController
      */
     public function editarUnidad($materia_id, $unidad_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         // Verificar permisos
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -754,7 +754,7 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -827,7 +827,7 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -892,7 +892,7 @@ class MateriasController extends BaseController
     public function eliminarUnidad($materia_id, $unidad_id)
     {
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -946,7 +946,7 @@ class MateriasController extends BaseController
      */
     public function nuevoTema($materia_id, $unidad_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         // Verificar permisos
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -990,7 +990,7 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar permisos
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1051,7 +1051,7 @@ class MateriasController extends BaseController
      */
     public function editarTema($materia_id, $unidad_id, $tema_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         // Verificar permisos
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1101,7 +1101,7 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar permisos
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1167,7 +1167,7 @@ class MateriasController extends BaseController
     public function eliminarTema($materia_id, $unidad_id, $tema_id)
     {
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar permisos
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1204,7 +1204,7 @@ class MateriasController extends BaseController
      */
     public function bibliografia($materia_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
@@ -1224,7 +1224,7 @@ class MateriasController extends BaseController
 
     public function nuevaBibliografia($materia_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
@@ -1247,29 +1247,15 @@ class MateriasController extends BaseController
      */
     public function guardarBibliografia($materia_id)
     {
-        $tipo = trim($this->request->getPost('tipo'));
-        $autor = trim($this->request->getPost('autor'));
-        $titulo = trim($this->request->getPost('titulo'));
-        $editorial = trim($this->request->getPost('editorial'));
-        $anio = trim($this->request->getPost('anio'));
-        $isbn = trim($this->request->getPost('isbn'));
-        $enlace = trim($this->request->getPost('enlace'));
-        $descripcion = trim($this->request->getPost('descripcion'));
+        $referencia = trim($this->request->getPost('referencia'));
 
         $data = [
             'materia_id' => $materia_id,
-            'tipo' => $tipo,
-            'autor' => $autor,
-            'titulo' => $titulo,
-            'editorial' => $editorial,
-            'anio' => $anio,
-            'isbn' => $isbn,
-            'enlace' => $enlace,
-            'descripcion' => $descripcion
+            'referencia' => $referencia
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1280,37 +1266,9 @@ class MateriasController extends BaseController
 
             // Reglas de validación
             $rules = [
-                'tipo' => [
-                    'label' => 'Tipo',
-                    'rules' => 'required|in_list[basica,complementaria,electronica,otros]',
-                ],
-                'autor' => [
-                    'label' => 'Autor',
-                    'rules' => 'required|min_length[3]|max_length[200]',
-                ],
-                'titulo' => [
-                    'label' => 'Título',
-                    'rules' => 'required|min_length[3]|max_length[255]',
-                ],
-                'editorial' => [
-                    'label' => 'Editorial',
-                    'rules' => 'permit_empty|max_length[100]',
-                ],
-                'anio' => [
-                    'label' => 'Año',
-                    'rules' => 'permit_empty|numeric|min_length[4]|max_length[4]',
-                ],
-                'isbn' => [
-                    'label' => 'ISBN',
-                    'rules' => 'permit_empty|max_length[20]',
-                ],
-                'enlace' => [
-                    'label' => 'Enlace',
-                    'rules' => 'permit_empty|valid_url|max_length[255]',
-                ],
-                'descripcion' => [
+                'referencia' => [
                     'label' => 'Descripción',
-                    'rules' => 'permit_empty|max_length[500]',
+                    'rules' => 'required',
                 ],
             ];
 
@@ -1323,14 +1281,7 @@ class MateriasController extends BaseController
             // Preparar datos para insertar
             $insertData = [
                 'materia_id' => $materia_id,
-                'tipo' => $tipo,
-                'autor' => $autor,
-                'titulo' => $titulo,
-                'editorial' => $editorial,
-                'anio' => $anio,
-                'isbn' => $isbn,
-                'enlace' => $enlace,
-                'descripcion' => $descripcion,
+                'referencia' => $referencia,
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
@@ -1354,7 +1305,7 @@ class MateriasController extends BaseController
      */
     public function editarBibliografia($materia_id, $bibliografia_id)
     {
-        $usuarioId = 2;
+        $usuarioId = session("user_id");
 
         // Verificar que la materia pertenece al usuario
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1390,30 +1341,16 @@ class MateriasController extends BaseController
      */
     public function actualizarBibliografia($materia_id, $bibliografia_id)
     {
-        $tipo = trim($this->request->getPost('tipo'));
-        $autor = trim($this->request->getPost('autor'));
-        $titulo = trim($this->request->getPost('titulo'));
-        $editorial = trim($this->request->getPost('editorial'));
-        $anio = trim($this->request->getPost('anio'));
-        $isbn = trim($this->request->getPost('isbn'));
-        $enlace = trim($this->request->getPost('enlace'));
-        $descripcion = trim($this->request->getPost('descripcion'));
+        $referencia = trim($this->request->getPost('referencia'));
 
         $data = [
             'bibliografia_id' => $bibliografia_id,
             'materia_id' => $materia_id,
-            'tipo' => $tipo,
-            'autor' => $autor,
-            'titulo' => $titulo,
-            'editorial' => $editorial,
-            'anio' => $anio,
-            'isbn' => $isbn,
-            'enlace' => $enlace,
-            'descripcion' => $descripcion
+            'referencia' => $referencia,
         ];
 
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1430,37 +1367,9 @@ class MateriasController extends BaseController
 
             // Reglas de validación (las mismas que en guardar)
             $rules = [
-                'tipo' => [
-                    'label' => 'Tipo',
-                    'rules' => 'required|in_list[basica,complementaria,electronica,otros]',
-                ],
-                'autor' => [
-                    'label' => 'Autor',
-                    'rules' => 'required|min_length[3]|max_length[200]',
-                ],
-                'titulo' => [
-                    'label' => 'Título',
-                    'rules' => 'required|min_length[3]|max_length[255]',
-                ],
-                'editorial' => [
-                    'label' => 'Editorial',
-                    'rules' => 'permit_empty|max_length[100]',
-                ],
-                'anio' => [
-                    'label' => 'Año',
-                    'rules' => 'permit_empty|numeric|min_length[4]|max_length[4]',
-                ],
-                'isbn' => [
-                    'label' => 'ISBN',
-                    'rules' => 'permit_empty|max_length[20]',
-                ],
-                'enlace' => [
-                    'label' => 'Enlace',
-                    'rules' => 'permit_empty|valid_url|max_length[255]',
-                ],
-                'descripcion' => [
+                'referencia' => [
                     'label' => 'Descripción',
-                    'rules' => 'permit_empty|max_length[500]',
+                    'rules' => 'required',
                 ],
             ];
 
@@ -1472,14 +1381,7 @@ class MateriasController extends BaseController
 
             // Preparar datos para actualizar
             $updateData = [
-                'tipo' => $tipo,
-                'autor' => $autor,
-                'titulo' => $titulo,
-                'editorial' => $editorial,
-                'anio' => $anio,
-                'isbn' => $isbn,
-                'enlace' => $enlace,
-                'descripcion' => $descripcion,
+                'referencia' => $referencia,
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
@@ -1504,7 +1406,7 @@ class MateriasController extends BaseController
     public function eliminarBibliografia($materia_id, $bibliografia_id)
     {
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
             if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
@@ -1538,7 +1440,7 @@ class MateriasController extends BaseController
     public function generarWord($materia_id)
     {
         try {
-            $usuarioId = 2;
+            $usuarioId = session("user_id");
             $materia = $this->materiaModel->getMateriaWithRelations($materia_id, $usuarioId);
 
             if (!$materia) {

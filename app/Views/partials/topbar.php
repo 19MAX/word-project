@@ -3,7 +3,7 @@
         <button id="sidebar-toggle" class="btn btn-sm">
             <i class="fas fa-bars"></i>
         </button>
-        <a class="navbar-brand ms-2" href="#"><?= $appTitle ?? 'ASISTENCIAS' ?></a>
+        <a class="navbar-brand ms-2" href="#"><?= $appTitle ?? 'App system' ?></a>
         <div class="d-flex ms-auto">
             <div class="form-check form-switch me-3 mt-2">
                 <input class="form-check-input" type="checkbox" id="darkModeToggle">

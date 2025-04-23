@@ -73,7 +73,10 @@ $routes->group('materias', function ($routes) {
     // Bibliografía
     $routes->get('bibliografia/(:num)', 'MateriasController::bibliografia/$1');
     $routes->get('nueva-bibliografia/(:num)', 'MateriasController::nuevaBibliografia/$1');
+    $routes->get('editar-bibliografia/(:num)/(:num)', 'MateriasController::editarBibliografia/$1/$2');
     $routes->post('guardar-bibliografia/(:num)', 'MateriasController::guardarBibliografia/$1');
+    $routes->post('actualizar-bibliografia/(:num)/(:num)', 'MateriasController::actualizarBibliografia/$1/$2');
+    $routes->get('eliminar-bibliografia/(:num)/(:num)', 'MateriasController::eliminarBibliografia/$1/$2');
     // ... rutas similares para editar/actualizar/eliminar bibliografia
 
 });

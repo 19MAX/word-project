@@ -43,9 +43,9 @@ Panel de Control - Mi Aplicación
                                                 Acciones
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow">
-                                                <li><a class="dropdown-item"
+                                                <!-- <li><a class="dropdown-item"
                                                         href="<?= base_url('materias/') . $materia['materia_id'] ?>">
-                                                        <i class="fas fa-eye"></i> Ver</a></li>
+                                                        <i class="fas fa-eye"></i> Ver</a></li> -->
                                                 <li><a class="dropdown-item"
                                                         href="<?= base_url('materias/editar/') . $materia['materia_id'] ?>">
                                                         <i class="fas fa-edit"></i> Editar</a></li>
@@ -252,7 +252,7 @@ Panel de Control - Mi Aplicación
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = <?= base_url('materias/eliminar/') ?> materia_id + id;
+                window.location.href = "<?= base_url('materias/eliminar/') ?> materia_id + id";
             }
         });
     }
