@@ -28,10 +28,6 @@ $routes->group('admin', static function ($routes) {
         $users->post('reset-password', 'Admin\UsersController::resetPassword');
     });
 
-    // Asistencias (Admin)
-    $routes->get('attendances', 'Admin\AdminAttendanceController::index');
-    $routes->post('attendances/getAttendances', 'Admin\AdminAttendanceController::getAttendances');
-    $routes->post('attendances/validate', 'Admin\AdminAttendanceController::validateA');
 });
 
 // Materias CRUD

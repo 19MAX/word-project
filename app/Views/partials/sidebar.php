@@ -32,14 +32,6 @@
                 </ul>
             </li>
 
-            <!-- Gestionar Asistencias - Solo visible para administradores -->
-            <li class="nav-item">
-                <a class="nav-link" href="<?= site_url('admin/attendances') ?>" data-title="Gestionar Asistencias"
-                    title="Gestionar Asistencias">
-                    <i class="fa-solid fa-bars-progress"></i>
-                    <span class="nav-text">Gestionar Asistencias</span>
-                </a>
-            </li>
 
         <?php elseif ($role === 'user'): ?>
             <!-- Registrar Asistencia - Visible para todos -->

@@ -115,7 +115,9 @@ class Filters extends BaseFilters
                 'user/*',
                 'user',
                 'asistencia/*',
-                'dashboard'
+                'dashboard',
+                'materias',
+                'materias/*',
             ],
         ],
         'logged_in' => [
