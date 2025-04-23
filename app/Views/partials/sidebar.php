@@ -44,19 +44,10 @@
         <?php elseif ($role === 'user'): ?>
             <!-- Registrar Asistencia - Visible para todos -->
             <li class="nav-item">
-                <a class="nav-link" href="<?= site_url('user') ?>" data-title="Registrar Asistencia"
+                <a class="nav-link" href="<?= site_url('materias') ?>" data-title="Registrar Asistencia"
                     title="Registrar Asistencia">
-                    <i class="fa-solid fa-earth-asia"></i>
-                    <span class="nav-text">Registrar Asistencia</span>
-                </a>
-            </li>
-
-            <!-- Mis Asistencias - Visible para todos -->
-            <li class="nav-item">
-                <a class="nav-link" href="<?= site_url('user/attendances') ?>" data-title="Mis Asistencias"
-                    title="Mis Asistencias">
-                    <i class="fa-solid fa-user-tie"></i>
-                    <span class="nav-text">Mis Asistencias</span>
+                    <i class="fa-solid fa-book"></i>
+                    <span class="nav-text">Mis Documentos</span>
                 </a>
             </li>
 

@@ -38,7 +38,7 @@ class DashboardController extends BaseController
 
             case 'user':
 
-                return view('user/dashboard');
+                return view('client/dashboard');
 
                 break;
 

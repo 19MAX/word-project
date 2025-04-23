@@ -336,11 +336,11 @@
     <?php if (session()->has('flashMessages')): ?>
         <?php foreach (session('flashMessages') as $message): ?>
             <?php
-            $type = $message[1]; // Tipo de notificación
-            $msg = $message[0];  // Mensaje
-            $position = $message[2] ?? 'top-end'; // Posición (por defecto: top-end)
+            $type = $message[1];
+            $msg = $message[0];
+            $position = $message[2] ?? 'top-end';
             ?>
-            showAlert('<?= $type ?>', '<?= $msg ?>', '<?= $position ?>');
+            showAlert(<?= json_encode($type) ?>, <?= json_encode($msg) ?>, <?= json_encode($position) ?>);
         <?php endforeach; ?>
     <?php endif; ?>
 </script>

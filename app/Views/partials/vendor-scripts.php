@@ -18,4 +18,5 @@
 <script src="https://cdn.datatables.net/buttons/3.2.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/3.2.2/js/buttons.colVis.min.js"></script>
 
-<script src="<?= base_url("assets/js/datatables.js") ?>"></script>
+<!-- Summernote JS (opcional) -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>

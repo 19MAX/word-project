@@ -14,6 +14,9 @@
     <!-- Datatables CSS -->
     <link href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/buttons/3.2.2/css/buttons.bootstrap5.css" rel="stylesheet">
+
+<!-- Summernote CSS (opcional) -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
     <?= $this->renderSection('styles') ?>
 </head>
 

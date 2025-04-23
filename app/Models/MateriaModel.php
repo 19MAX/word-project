@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class MateriaModel extends Model
 {
     protected $table = 'materias';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'materia_id';
     protected $useAutoIncrement = true;
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
@@ -96,5 +96,15 @@ class MateriaModel extends Model
         }
     }
 
+
+    /**
+     * Verificar si una materia pertenece a un usuario
+     */
+    public function belongsToUser($materia_id, $usuario_id)
+    {
+        return $this->where('materia_id', $materia_id)
+            ->where('usuario_id', $usuario_id)
+            ->countAllResults() > 0;
+    }
 
 }
