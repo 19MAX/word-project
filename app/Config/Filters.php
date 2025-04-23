@@ -14,6 +14,7 @@ use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
 use App\Filters\AuthFilter;
 use App\Filters\LoggedInFilter;
+use App\Filters\MateriasFilter; // Añadimos nuestro nuevo filtro
 
 class Filters extends BaseFilters
 {
@@ -38,6 +39,7 @@ class Filters extends BaseFilters
         'performance' => PerformanceMetrics::class,
         'auth' => AuthFilter::class,
         'logged_in' => LoggedInFilter::class,
+        'materias_access' => MateriasFilter::class, // Registramos el nuevo filtro
     ];
 
     /**
@@ -124,6 +126,12 @@ class Filters extends BaseFilters
             'before' => [
                 'login',
                 '/'
+            ],
+        ],
+        'materias_access' => [ // Aplicamos nuestro nuevo filtro
+            'before' => [
+                'materias',
+                'materias/*',
             ],
         ],
     ];
