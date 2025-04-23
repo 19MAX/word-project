@@ -10,10 +10,11 @@ Unidades de <?= esc($materia['nombre']) ?>
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0 text-primary">Unidades de <?= esc($materia['nombre']) ?></h5>
             <div>
-                <a href="<?= site_url('materias') ?>" class="btn btn-secondary btn-sm me-2">
+                <a href="<?= base_url('materias') ?>" class="btn btn-secondary btn-sm me-2">
                     <i class="fas fa-arrow-left"></i> Volver
                 </a>
-                <a href="<?= site_url("materias/nueva-unidad/{$materia['materia_id']}") ?>" class="btn btn-primary btn-sm">
+                <a href="<?= base_url("materias/nueva-unidad/{$materia['materia_id']}") ?>"
+                    class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Nueva Unidad
                 </a>
             </div>
@@ -39,7 +40,8 @@ Unidades de <?= esc($materia['nombre']) ?>
 
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <h6 class="mb-0">Temas</h6>
-                                        <a href="<?= site_url("materias/nuevo-tema/{$unidad['unidad_id']}") ?>" class="btn btn-sm btn-success">
+                                        <a href="<?= base_url("materias/nuevo-tema/" . $materia["materia_id"] . "/" . $unidad['unidad_id']) ?>"
+                                            class="btn btn-sm btn-success">
                                             <i class="fas fa-plus"></i> Tema
                                         </a>
                                     </div>
@@ -54,11 +56,14 @@ Unidades de <?= esc($materia['nombre']) ?>
                                                         <strong><?= $tema['numero_tema'] ?>.</strong> <?= esc($tema['nombre']) ?>
                                                     </div>
                                                     <div>
-                                                        <a href="<?= site_url("materias/editar-tema/{$tema['tema_id']}") ?>" class="btn btn-sm btn-outline-primary me-1">
+                                                        <a href="<?= base_url("materias/editar-tema/" . $materia["materia_id"] . "/" . $unidad['unidad_id']. "/" .$tema['tema_id'])  ?>"
+                                                            class="btn btn-sm btn-outline-primary me-1">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
-                                                        <a href="<?= site_url("materias/eliminar-tema/{$tema['tema_id']}") ?>" class="btn btn-sm btn-outline-danger"
-                                                           onclick="return confirm('¿Eliminar este tema?')">
+                                                        <a href="#"
+                                                            class="btn btn-sm btn-outline-danger btn-eliminar-tema"
+                                                            data-url="<?= base_url("materias/eliminar-tema/" . $materia["materia_id"] . "/" . $unidad['unidad_id']. "/" .$tema['tema_id']) ?>"
+                                                            >
                                                             <i class="fas fa-trash"></i>
                                                         </a>
                                                     </div>
@@ -68,13 +73,16 @@ Unidades de <?= esc($materia['nombre']) ?>
                                     <?php endif; ?>
 
                                     <div class="mt-3">
-                                        <a href="<?= site_url("materias/editar-unidad/" . $materia["materia_id"] . "/" . $unidad['unidad_id']) ?>" class="btn btn-sm btn-primary me-2">
+                                        <a href="<?= base_url("materias/editar-unidad/" . $materia["materia_id"] . "/" . $unidad['unidad_id']) ?>"
+                                            class="btn btn-sm btn-primary me-2">
                                             <i class="fas fa-edit"></i> Editar Unidad
                                         </a>
-                                        <a href="<?= site_url("materias/eliminar-unidad/{$unidad['unidad_id']}") ?>" class="btn btn-sm btn-danger"
-                                           onclick="return confirm('¿Eliminar esta unidad y todos sus temas?')">
+
+                                        <a href="#" class="btn btn-sm btn-danger btn-eliminar"
+                                            data-url="<?= base_url("materias/eliminar-unidad/{$materia['materia_id']}/{$unidad['unidad_id']}") ?>">
                                             <i class="fas fa-trash"></i> Eliminar Unidad
                                         </a>
+
                                     </div>
                                 </div>
                             </div>
@@ -97,6 +105,45 @@ Unidades de <?= esc($materia['nombre']) ?>
                 toggle: true
             });
         }
+    });
+
+    $('.btn-eliminar').on('click', function (e) {
+        e.preventDefault();
+        const url = $(this).data('url');
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción eliminará el objetivo de la materia.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    });
+    $('.btn-eliminar-tema').on('click', function (e) {
+        e.preventDefault();
+        const url = $(this).data('url');
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción eliminará el objetivo de la materia.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
     });
 </script>
 <?= $this->endSection() ?>

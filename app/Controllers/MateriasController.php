@@ -663,7 +663,7 @@ class MateriasController extends BaseController
 
 
     /**
-     * SECCIÓN UNIDADES Y TEMAS
+     * SECCIÓN UNIDADES
      */
     public function unidades($materia_id)
     {
@@ -936,8 +936,268 @@ class MateriasController extends BaseController
     }
 
 
-    // ... (métodos similares para editarUnidad, actualizarUnidad, eliminarUnidad)
-    // ... (métodos para gestionar Temas: nuevoTema, guardarTema, etc.)
+
+    /**
+     * SECCIÓN TEMAS
+     */
+
+    /**
+     * Mostrar formulario para nuevo tema
+     */
+    public function nuevoTema($materia_id, $unidad_id)
+    {
+        $usuarioId = 2;
+
+        // Verificar permisos
+        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+            return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
+        }
+
+        // Verificar que la unidad pertenece a la materia
+        $unidad = $this->unidadModel->find($unidad_id);
+        if (!$unidad || $unidad['materia_id'] != $materia_id) {
+            return redirect()->to("/materias/unidades/{$materia_id}")->with('error', 'Unidad no encontrada');
+        }
+
+        $materia = $this->materiaModel->find($materia_id);
+        $ultimoNumero = $this->temaModel->where('unidad_id', $unidad_id)
+            ->orderBy('numero_tema', 'DESC')
+            ->first();
+
+        $data = [
+            'title' => 'Nuevo Tema',
+            'materia' => $materia,
+            'unidad' => $unidad,
+            'ultimo_numero' => $ultimoNumero ? $ultimoNumero['numero_tema'] : 0,
+            'validation' => \Config\Services::validation()
+        ];
+
+        return view('client/materias/form_tema', $data);
+    }
+
+    /**
+     * Guardar un nuevo tema
+     */
+    public function guardarTema($materia_id, $unidad_id)
+    {
+        $numero_tema = trim($this->request->getPost('numero_tema'));
+        $nombre = trim($this->request->getPost('nombre'));
+
+        $data = [
+            'unidad_id' => $unidad_id,
+            'numero_tema' => $numero_tema,
+            'nombre' => $nombre,
+        ];
+
+        try {
+            $usuarioId = 2;
+
+            // Verificar permisos
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            // Verificar que la unidad pertenece a la materia
+            $unidad = $this->unidadModel->find($unidad_id);
+            if (!$unidad || $unidad['materia_id'] != $materia_id) {
+                throw new \RuntimeException('Unidad no encontrada.');
+            }
+
+            $validation = \Config\Services::validation();
+
+            // Reglas de validación
+            $rules = [
+                'numero_tema' => [
+                    'label' => 'Número de Tema',
+                    'rules' => 'required|numeric',
+                ],
+                'nombre' => [
+                    'label' => 'Nombre del Tema',
+                    'rules' => 'required',
+                ],
+            ];
+
+            $validation->setRules($rules);
+
+            if (!$validation->run($data)) {
+                return redirectView("materias/unidades/{$materia_id}/{$unidad_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+            }
+
+            // Preparar datos para insertar
+            $insertData = [
+                'unidad_id' => $unidad_id,
+                'numero_tema' => $numero_tema,
+                'nombre' => $nombre,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Insertar tema
+            $inserted = $this->temaModel->insert($insertData);
+
+            if (!$inserted) {
+                throw new \RuntimeException('No se pudo guardar el tema.');
+            }
+
+            return redirectView("materias/unidades/{$materia_id}", null, [['Tema creado exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::guardarTema] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/unidades/{$materia_id}/{$unidad_id}", null, [['Error al crear el tema: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
+        }
+    }
+
+    /**
+     * Mostrar formulario para editar tema
+     */
+    public function editarTema($materia_id, $unidad_id, $tema_id)
+    {
+        $usuarioId = 2;
+
+        // Verificar permisos
+        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+            return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
+        }
+
+        // Verificar que la unidad pertenece a la materia
+        $unidad = $this->unidadModel->find($unidad_id);
+        if (!$unidad || $unidad['materia_id'] != $materia_id) {
+            return redirect()->to("/materias/unidades/{$materia_id}")->with('error', 'Unidad no encontrada');
+        }
+
+        // Obtener el tema
+        $tema = $this->temaModel->find($tema_id);
+        if (!$tema || $tema['unidad_id'] != $unidad_id) {
+            return redirect()->to("/materias/unidades/{$materia_id}")->with('error', 'Tema no encontrado');
+        }
+
+        $materia = $this->materiaModel->find($materia_id);
+
+        $data = [
+            'title' => 'Editar Tema',
+            'materia' => $materia,
+            'unidad' => $unidad,
+            'tema' => $tema,
+            'validation' => \Config\Services::validation()
+        ];
+
+        return view('client/materias/form_tema', $data);
+    }
+
+    /**
+     * Actualizar un tema existente
+     */
+    public function actualizarTema($materia_id, $unidad_id, $tema_id)
+    {
+        $numero_tema = trim($this->request->getPost('numero_tema'));
+        $nombre = trim($this->request->getPost('nombre'));
+        $descripcion = trim($this->request->getPost('descripcion'));
+
+        $data = [
+            'tema_id' => $tema_id,
+            'unidad_id' => $unidad_id,
+            'numero_tema' => $numero_tema,
+            'nombre' => $nombre,
+            'descripcion' => $descripcion,
+        ];
+
+        try {
+            $usuarioId = 2;
+
+            // Verificar permisos
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            // Verificar que la unidad pertenece a la materia
+            $unidad = $this->unidadModel->find($unidad_id);
+            if (!$unidad || $unidad['materia_id'] != $materia_id) {
+                throw new \RuntimeException('Unidad no encontrada.');
+            }
+
+            // Verificar que el tema existe y pertenece a la unidad
+            $tema = $this->temaModel->find($tema_id);
+            if (!$tema || $tema['unidad_id'] != $unidad_id) {
+                throw new \RuntimeException('Tema no encontrado.');
+            }
+
+            $validation = \Config\Services::validation();
+
+            // Reglas de validación
+            $rules = [
+                'numero_tema' => [
+                    'label' => 'Número de Tema',
+                    'rules' => 'required|numeric',
+                ],
+                'nombre' => [
+                    'label' => 'Nombre del Tema',
+                    'rules' => 'required|min_length[3]|max_length[100]',
+                ],
+            ];
+
+            $validation->setRules($rules);
+
+            if (!$validation->run($data)) {
+                return redirectView("materias/editar-tema/{$materia_id}/{$unidad_id}/{$tema_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+            }
+
+            // Actualizar tema
+            $updateData = [
+                'numero_tema' => $numero_tema,
+                'nombre' => $nombre,
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            $updated = $this->temaModel->update($tema_id, $updateData);
+
+            if (!$updated) {
+                throw new \RuntimeException('No se pudo actualizar el tema.');
+            }
+
+            return redirectView("materias/unidades/{$materia_id}", null, [['Tema actualizado exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::actualizarTema] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/editar-tema/{$materia_id}/{$unidad_id}/{$tema_id}", null, [['Error al actualizar el tema: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
+        }
+    }
+
+    /**
+     * Eliminar un tema
+     */
+    public function eliminarTema($materia_id, $unidad_id, $tema_id)
+    {
+        try {
+            $usuarioId = 2;
+
+            // Verificar permisos
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            // Verificar que la unidad pertenece a la materia
+            $unidad = $this->unidadModel->find($unidad_id);
+            if (!$unidad || $unidad['materia_id'] != $materia_id) {
+                throw new \RuntimeException('Unidad no encontrada.');
+            }
+
+            // Verificar que el tema existe y pertenece a la unidad
+            $tema = $this->temaModel->find($tema_id);
+            if (!$tema || $tema['unidad_id'] != $unidad_id) {
+                throw new \RuntimeException('Tema no encontrado.');
+            }
+
+            // Eliminar el tema
+            if (!$this->temaModel->delete($tema_id)) {
+                throw new \RuntimeException('Error al eliminar el tema.');
+            }
+
+            return redirectView("materias/unidades/{$materia_id}", null, [['Tema eliminado exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::eliminarTema] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/unidades/{$materia_id}", null, [['Error al eliminar el tema: ' . $e->getMessage(), 'error', 'top-end']], null);
+        }
+    }
 
     /**
      * SECCIÓN BIBLIOGRAFÍA
@@ -981,37 +1241,295 @@ class MateriasController extends BaseController
         return view('client/materias/form_bibliografia', $data);
     }
 
+
+    /**
+     * Guardar nueva bibliografía
+     */
     public function guardarBibliografia($materia_id)
+    {
+        $tipo = trim($this->request->getPost('tipo'));
+        $autor = trim($this->request->getPost('autor'));
+        $titulo = trim($this->request->getPost('titulo'));
+        $editorial = trim($this->request->getPost('editorial'));
+        $anio = trim($this->request->getPost('anio'));
+        $isbn = trim($this->request->getPost('isbn'));
+        $enlace = trim($this->request->getPost('enlace'));
+        $descripcion = trim($this->request->getPost('descripcion'));
+
+        $data = [
+            'materia_id' => $materia_id,
+            'tipo' => $tipo,
+            'autor' => $autor,
+            'titulo' => $titulo,
+            'editorial' => $editorial,
+            'anio' => $anio,
+            'isbn' => $isbn,
+            'enlace' => $enlace,
+            'descripcion' => $descripcion
+        ];
+
+        try {
+            $usuarioId = 2;
+
+            // Verificar que la materia pertenece al usuario
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            $validation = \Config\Services::validation();
+
+            // Reglas de validación
+            $rules = [
+                'tipo' => [
+                    'label' => 'Tipo',
+                    'rules' => 'required|in_list[basica,complementaria,electronica,otros]',
+                ],
+                'autor' => [
+                    'label' => 'Autor',
+                    'rules' => 'required|min_length[3]|max_length[200]',
+                ],
+                'titulo' => [
+                    'label' => 'Título',
+                    'rules' => 'required|min_length[3]|max_length[255]',
+                ],
+                'editorial' => [
+                    'label' => 'Editorial',
+                    'rules' => 'permit_empty|max_length[100]',
+                ],
+                'anio' => [
+                    'label' => 'Año',
+                    'rules' => 'permit_empty|numeric|min_length[4]|max_length[4]',
+                ],
+                'isbn' => [
+                    'label' => 'ISBN',
+                    'rules' => 'permit_empty|max_length[20]',
+                ],
+                'enlace' => [
+                    'label' => 'Enlace',
+                    'rules' => 'permit_empty|valid_url|max_length[255]',
+                ],
+                'descripcion' => [
+                    'label' => 'Descripción',
+                    'rules' => 'permit_empty|max_length[500]',
+                ],
+            ];
+
+            $validation->setRules($rules);
+
+            if (!$validation->run($data)) {
+                return redirectView("materias/nueva-bibliografia/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+            }
+
+            // Preparar datos para insertar
+            $insertData = [
+                'materia_id' => $materia_id,
+                'tipo' => $tipo,
+                'autor' => $autor,
+                'titulo' => $titulo,
+                'editorial' => $editorial,
+                'anio' => $anio,
+                'isbn' => $isbn,
+                'enlace' => $enlace,
+                'descripcion' => $descripcion,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Insertar bibliografía
+            $inserted = $this->bibliografiaModel->insert($insertData);
+
+            if (!$inserted) {
+                throw new \RuntimeException('No se pudo guardar la referencia bibliográfica.');
+            }
+
+            return redirectView("materias/bibliografia/{$materia_id}", null, [['Referencia bibliográfica guardada exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::guardarBibliografia] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/nueva-bibliografia/{$materia_id}", null, [['Error al guardar la referencia: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
+        }
+    }
+
+    /**
+     * Mostrar formulario para editar bibliografía
+     */
+    public function editarBibliografia($materia_id, $bibliografia_id)
     {
         $usuarioId = 2;
 
+        // Verificar que la materia pertenece al usuario
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
         }
 
-        $rules = [
-            'referencia' => 'required|min_length[10]',
-            'enlace' => 'permit_empty|valid_url'
-        ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        // Verificar que la bibliografía existe y pertenece a la materia
+        $bibliografia = $this->bibliografiaModel->find($bibliografia_id);
+        if (!$bibliografia || $bibliografia['materia_id'] != $materia_id) {
+            return redirect()->to("/materias/bibliografia/{$materia_id}")->with('error', 'Referencia bibliográfica no encontrada');
         }
 
+        $materia = $this->materiaModel->find($materia_id);
+
         $data = [
-            'materia_id' => $materia_id,
-            'referencia' => $this->request->getPost('referencia'),
-            'enlace' => $this->request->getPost('enlace')
+            'title' => 'Editar Referencia Bibliográfica',
+            'materia' => $materia,
+            'bibliografia' => $bibliografia,
+            'tipos_bibliografia' => [
+                'basica' => 'Básica',
+                'complementaria' => 'Complementaria',
+                'electronica' => 'Electrónica',
+                'otros' => 'Otros'
+            ],
+            'validation' => \Config\Services::validation()
         ];
 
-        if ($this->bibliografiaModel->save($data)) {
-            return redirect()->to("/materias/bibliografia/{$materia_id}")->with('success', 'Referencia guardada correctamente');
-        } else {
-            return redirect()->back()->withInput()->with('errors', $this->bibliografiaModel->errors());
+        return view('client/materias/form_bibliografia', $data);
+    }
+
+    /**
+     * Actualizar bibliografía existente
+     */
+    public function actualizarBibliografia($materia_id, $bibliografia_id)
+    {
+        $tipo = trim($this->request->getPost('tipo'));
+        $autor = trim($this->request->getPost('autor'));
+        $titulo = trim($this->request->getPost('titulo'));
+        $editorial = trim($this->request->getPost('editorial'));
+        $anio = trim($this->request->getPost('anio'));
+        $isbn = trim($this->request->getPost('isbn'));
+        $enlace = trim($this->request->getPost('enlace'));
+        $descripcion = trim($this->request->getPost('descripcion'));
+
+        $data = [
+            'bibliografia_id' => $bibliografia_id,
+            'materia_id' => $materia_id,
+            'tipo' => $tipo,
+            'autor' => $autor,
+            'titulo' => $titulo,
+            'editorial' => $editorial,
+            'anio' => $anio,
+            'isbn' => $isbn,
+            'enlace' => $enlace,
+            'descripcion' => $descripcion
+        ];
+
+        try {
+            $usuarioId = 2;
+
+            // Verificar que la materia pertenece al usuario
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            // Verificar que la bibliografía existe y pertenece a la materia
+            $bibliografia = $this->bibliografiaModel->find($bibliografia_id);
+            if (!$bibliografia || $bibliografia['materia_id'] != $materia_id) {
+                throw new \RuntimeException('Referencia bibliográfica no encontrada.');
+            }
+
+            $validation = \Config\Services::validation();
+
+            // Reglas de validación (las mismas que en guardar)
+            $rules = [
+                'tipo' => [
+                    'label' => 'Tipo',
+                    'rules' => 'required|in_list[basica,complementaria,electronica,otros]',
+                ],
+                'autor' => [
+                    'label' => 'Autor',
+                    'rules' => 'required|min_length[3]|max_length[200]',
+                ],
+                'titulo' => [
+                    'label' => 'Título',
+                    'rules' => 'required|min_length[3]|max_length[255]',
+                ],
+                'editorial' => [
+                    'label' => 'Editorial',
+                    'rules' => 'permit_empty|max_length[100]',
+                ],
+                'anio' => [
+                    'label' => 'Año',
+                    'rules' => 'permit_empty|numeric|min_length[4]|max_length[4]',
+                ],
+                'isbn' => [
+                    'label' => 'ISBN',
+                    'rules' => 'permit_empty|max_length[20]',
+                ],
+                'enlace' => [
+                    'label' => 'Enlace',
+                    'rules' => 'permit_empty|valid_url|max_length[255]',
+                ],
+                'descripcion' => [
+                    'label' => 'Descripción',
+                    'rules' => 'permit_empty|max_length[500]',
+                ],
+            ];
+
+            $validation->setRules($rules);
+
+            if (!$validation->run($data)) {
+                return redirectView("materias/editar-bibliografia/{$materia_id}/{$bibliografia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+            }
+
+            // Preparar datos para actualizar
+            $updateData = [
+                'tipo' => $tipo,
+                'autor' => $autor,
+                'titulo' => $titulo,
+                'editorial' => $editorial,
+                'anio' => $anio,
+                'isbn' => $isbn,
+                'enlace' => $enlace,
+                'descripcion' => $descripcion,
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Actualizar bibliografía
+            $updated = $this->bibliografiaModel->update($bibliografia_id, $updateData);
+
+            if (!$updated) {
+                throw new \RuntimeException('No se pudo actualizar la referencia bibliográfica.');
+            }
+
+            return redirectView("materias/bibliografia/{$materia_id}", null, [['Referencia bibliográfica actualizada exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::actualizarBibliografia] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/editar-bibliografia/{$materia_id}/{$bibliografia_id}", null, [['Error al actualizar la referencia: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
         }
     }
 
-    // ... (métodos similares para editarBibliografia, actualizarBibliografia, eliminarBibliografia)
+    /**
+     * Eliminar bibliografía
+     */
+    public function eliminarBibliografia($materia_id, $bibliografia_id)
+    {
+        try {
+            $usuarioId = 2;
+
+            // Verificar que la materia pertenece al usuario
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            // Verificar que la bibliografía existe y pertenece a la materia
+            $bibliografia = $this->bibliografiaModel->find($bibliografia_id);
+            if (!$bibliografia || $bibliografia['materia_id'] != $materia_id) {
+                throw new \RuntimeException('Referencia bibliográfica no encontrada o no pertenece a esta materia.');
+            }
+
+            // Eliminar la bibliografía
+            if (!$this->bibliografiaModel->delete($bibliografia_id)) {
+                throw new \RuntimeException('Error al eliminar la referencia bibliográfica.');
+            }
+
+            return redirectView("materias/bibliografia/{$materia_id}", null, [['Referencia bibliográfica eliminada exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::eliminarBibliografia] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/bibliografia/{$materia_id}", null, [['Error al eliminar la referencia: ' . $e->getMessage(), 'error', 'top-end']], null);
+        }
+    }
+
 
     /**
      * Generar documento Word

@@ -240,7 +240,7 @@ Panel de Control - Mi Aplicación
         });
     });
 
-    function confirmarEliminar(id) {
+    function confirmarEliminar(id,materia_id) {
         Swal.fire({
             title: '¿Estás seguro?',
             text: 'Todos los contenidos relacionados también se eliminarán.',
@@ -252,7 +252,7 @@ Panel de Control - Mi Aplicación
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = `<?= base_url('materias/eliminar/') ?>${id}`;
+                window.location.href = <?= base_url('materias/eliminar/') ?> materia_id + id;
             }
         });
     }

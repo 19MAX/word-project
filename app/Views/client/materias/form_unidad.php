@@ -18,20 +18,23 @@ Formulario de unidades
                 method="post">
                 <?= csrf_field() ?>
 
-                <div class="form-group">
-                    <label for="numero_unidad">Número de Unidad</label>
-                    <input type="number" class="form-control" id="numero_unidad" name="numero_unidad"
-                        value="<?= isset($unidad) ? $unidad['numero_unidad'] : ($ultimo_numero + 1) ?>" required
-                        min="1">
+                <div class="row">
+
+                    <div class="form-group mb-3 col">
+                        <label for="numero_unidad">Número de Unidad</label>
+                        <input type="number" class="form-control" id="numero_unidad" name="numero_unidad"
+                            value="<?= isset($unidad) ? $unidad['numero_unidad'] : ($ultimo_numero + 1) ?>" required
+                            min="1">
+                    </div>
+
+                    <div class="form-group mb-3 col">
+                        <label for="nombre">Nombre de la Unidad</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre"
+                            value="<?= isset($unidad) ? esc($unidad['nombre']) : '' ?>" required>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="nombre">Nombre de la Unidad</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre"
-                        value="<?= isset($unidad) ? esc($unidad['nombre']) : '' ?>" required>
-                </div>
-
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="objetivo">Objetivo de la Unidad</label>
                     <textarea class="form-control" id="objetivo" name="objetivo" rows="3"
                         required><?= isset($unidad) ? esc($unidad['objetivo']) : '' ?></textarea>

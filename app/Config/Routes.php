@@ -60,10 +60,14 @@ $routes->group('materias', function ($routes) {
     $routes->get('editar-unidad/(:num)/(:num)', 'MateriasController::editarUnidad/$1/$2');
     $routes->post('actualizar-unidad/(:num)/(:num)', 'MateriasController::actualizarUnidad/$1/$2');
     $routes->post('guardar-unidad/(:num)', 'MateriasController::guardarUnidad/$1');
+    $routes->get('eliminar-unidad/(:num)/(:num)', 'MateriasController::eliminarUnidad/$1/$2');
     // ... rutas similares para editar/actualizar/eliminar unidad
 
-    $routes->get('nuevo-tema/(:num)', 'MateriasController::nuevoTema/$1');
-    $routes->post('guardar-tema/(:num)', 'MateriasController::guardarTema/$1');
+    $routes->get('nuevo-tema/(:num)/(:num)', 'MateriasController::nuevoTema/$1/$2');
+    $routes->get('editar-tema/(:num)/(:num)/(:num)', 'MateriasController::editarTema/$1/$2/$3');
+    $routes->post('guardar-tema/(:num)/(:num)', 'MateriasController::guardarTema/$1/$2');
+    $routes->post('actualizar-tema/(:num)/(:num)/(:num)', 'MateriasController::actualizarTema/$1/$2/$3');
+    $routes->get('eliminar-tema/(:num)/(:num)/(:num)', 'MateriasController::eliminarTema/$1/$2/$3');
     // ... rutas similares para editar/actualizar/eliminar tema
 
     // Bibliografía
