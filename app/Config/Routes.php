@@ -57,6 +57,8 @@ $routes->group('materias', function ($routes) {
     // Unidades y Temas
     $routes->get('unidades/(:num)', 'MateriasController::unidades/$1');
     $routes->get('nueva-unidad/(:num)', 'MateriasController::nuevaUnidad/$1');
+    $routes->get('editar-unidad/(:num)/(:num)', 'MateriasController::editarUnidad/$1/$2');
+    $routes->post('actualizar-unidad/(:num)/(:num)', 'MateriasController::actualizarUnidad/$1/$2');
     $routes->post('guardar-unidad/(:num)', 'MateriasController::guardarUnidad/$1');
     // ... rutas similares para editar/actualizar/eliminar unidad
 

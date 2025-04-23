@@ -661,61 +661,6 @@ class MateriasController extends BaseController
         }
     }
 
-    /**
-     * Reordenar objetivos
-     */
-    public function reordenarObjetivos($materia_id)
-    {
-        $usuarioId = 2;
-
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-            return $this->response->setStatusCode(403)->setJSON(['error' => 'Acceso no autorizado']);
-        }
-
-        $orden = $this->request->getJSON(true);
-
-        if (empty($orden) || !isset($orden['objetivos'])) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Datos de ordenamiento inválidos']);
-        }
-
-        $this->db->transStart();
-
-        foreach ($orden['objetivos'] as $item) {
-            if (isset($item['id']) && isset($item['position'])) {
-                $this->objetivoModel->update($item['id'], [
-                    'numero_objetivo' => $item['position'],
-                    'updated_at' => date('Y-m-d H:i:s')
-                ]);
-            }
-        }
-
-        $this->db->transComplete();
-
-        if ($this->db->transStatus() === false) {
-            return $this->response->setStatusCode(500)->setJSON(['error' => 'Error al reordenar los objetivos']);
-        }
-
-        return $this->response->setJSON(['success' => true]);
-    }
-
-    /**
-     * Obtener objetivos mediante AJAX
-     */
-    public function getObjetivos($materia_id)
-    {
-        $usuarioId = 2;
-
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-            return $this->response->setStatusCode(403)->setJSON(['error' => 'Acceso no autorizado']);
-        }
-
-        $objetivos = $this->objetivoModel->getObjetivosWithResultados($materia_id);
-
-        return $this->response->setJSON([
-            'success' => true,
-            'data' => $objetivos
-        ]);
-    }
 
     /**
      * SECCIÓN UNIDADES Y TEMAS
@@ -762,38 +707,234 @@ class MateriasController extends BaseController
 
         return view('client/materias/form_unidad', $data);
     }
-
-    public function guardarUnidad($materia_id)
+    /**
+     * Mostrar formulario para editar unidad
+     */
+    public function editarUnidad($materia_id, $unidad_id)
     {
         $usuarioId = 2;
 
+        // Verificar permisos
         if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
         }
 
-        $rules = [
-            'numero_unidad' => 'required|numeric',
-            'nombre' => 'required|min_length[3]|max_length[100]',
-            'objetivo' => 'required|min_length[10]'
+        // Verificar que la unidad existe y pertenece a la materia
+        $unidad = $this->unidadModel->find($unidad_id);
+        if (!$unidad || $unidad['materia_id'] != $materia_id) {
+            return redirect()->to("/materias/unidades/{$materia_id}")->with('error', 'Unidad no encontrada');
+        }
+
+        $materia = $this->materiaModel->find($materia_id);
+
+        $data = [
+            'title' => 'Editar Unidad',
+            'materia' => $materia,
+            'unidad' => $unidad,
+            'validation' => \Config\Services::validation()
         ];
 
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
+        return view('client/materias/form_unidad', $data);
+    }
+
+    /**
+     * Guardar una nueva unidad
+     */
+    public function guardarUnidad($materia_id)
+    {
+        $numero_unidad = trim($this->request->getPost('numero_unidad'));
+        $nombre = trim($this->request->getPost('nombre'));
+        $objetivo = trim($this->request->getPost('objetivo'));
 
         $data = [
             'materia_id' => $materia_id,
-            'numero_unidad' => $this->request->getPost('numero_unidad'),
-            'nombre' => $this->request->getPost('nombre'),
-            'objetivo' => $this->request->getPost('objetivo')
+            'numero_unidad' => $numero_unidad,
+            'nombre' => $nombre,
+            'objetivo' => $objetivo
         ];
 
-        if ($this->unidadModel->save($data)) {
-            return redirect()->to("/materias/unidades/{$materia_id}")->with('success', 'Unidad guardada correctamente');
-        } else {
-            return redirect()->back()->withInput()->with('errors', $this->unidadModel->errors());
+        try {
+            $usuarioId = 2;
+
+            // Verificar que la materia pertenece al usuario
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            $validation = \Config\Services::validation();
+
+            // Reglas de validación
+            $rules = [
+                'numero_unidad' => [
+                    'label' => 'Número de Unidad',
+                    'rules' => 'required|numeric',
+                ],
+                'nombre' => [
+                    'label' => 'Nombre de la Unidad',
+                    'rules' => 'required',
+                ],
+                'objetivo' => [
+                    'label' => 'Objetivo de la Unidad',
+                    'rules' => 'required',
+                ],
+            ];
+
+            $validation->setRules($rules);
+
+            if (!$validation->run($data)) {
+                return redirectView("materias/unidades/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+            }
+
+            // Preparar datos para insertar
+            $insertData = [
+                'materia_id' => $materia_id,
+                'numero_unidad' => $numero_unidad,
+                'nombre' => $nombre,
+                'objetivo' => $objetivo,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Insertar unidad
+            $inserted = $this->unidadModel->insert($insertData);
+
+            if (!$inserted) {
+                throw new \RuntimeException('No se pudo guardar la unidad.');
+            }
+
+            return redirectView("materias/unidades/{$materia_id}", null, [['Unidad creada exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::guardarUnidad] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/unidades/{$materia_id}", null, [['Error al crear la unidad: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
         }
     }
+
+    /**
+     * Actualizar una unidad existente
+     */
+    public function actualizarUnidad($materia_id, $unidad_id)
+    {
+        $numero_unidad = trim($this->request->getPost('numero_unidad'));
+        $nombre = trim($this->request->getPost('nombre'));
+        $objetivo = trim($this->request->getPost('objetivo'));
+
+        $data = [
+            'unidad_id' => $unidad_id,
+            'materia_id' => $materia_id,
+            'numero_unidad' => $numero_unidad,
+            'nombre' => $nombre,
+            'objetivo' => $objetivo
+        ];
+
+        try {
+            $usuarioId = 2;
+
+            // Verificar que la materia pertenece al usuario
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            // Verificar si existe la unidad
+            $unidad = $this->unidadModel->find($unidad_id);
+            if (!$unidad || $unidad['materia_id'] != $materia_id) {
+                throw new \RuntimeException('Unidad no encontrada.');
+            }
+
+            $validation = \Config\Services::validation();
+
+            // Reglas de validación
+            $rules = [
+                'numero_unidad' => [
+                    'label' => 'Número de Unidad',
+                    'rules' => 'required|numeric',
+                ],
+                'nombre' => [
+                    'label' => 'Nombre de la Unidad',
+                    'rules' => 'required|min_length[3]|max_length[100]',
+                ],
+                'objetivo' => [
+                    'label' => 'Objetivo de la Unidad',
+                    'rules' => 'required|min_length[10]|max_length[500]',
+                ],
+            ];
+
+            $validation->setRules($rules);
+
+            if (!$validation->run($data)) {
+                return redirectView("materias/unidades/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+            }
+
+            // Actualizar unidad
+            $updateData = [
+                'numero_unidad' => $numero_unidad,
+                'nombre' => $nombre,
+                'objetivo' => $objetivo,
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            $updated = $this->unidadModel->update($unidad_id, $updateData);
+
+            if (!$updated) {
+                throw new \RuntimeException('No se pudo actualizar la unidad.');
+            }
+
+            return redirectView("materias/unidades/{$materia_id}", null, [['Unidad actualizada exitosamente', 'success', 'center']], null);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::actualizarUnidad] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/unidades/{$materia_id}", null, [['Error al actualizar la unidad: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
+        }
+    }
+
+    /**
+     * Eliminar una unidad y sus temas asociados
+     */
+    public function eliminarUnidad($materia_id, $unidad_id)
+    {
+        try {
+            $usuarioId = 2;
+
+            // Verificar que la materia pertenece al usuario
+            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
+            }
+
+            // Verificar que la unidad existe y pertenece a la materia
+            $unidad = $this->unidadModel->find($unidad_id);
+            if (!$unidad || $unidad['materia_id'] != $materia_id) {
+                throw new \RuntimeException('Unidad no encontrada o no pertenece a esta materia.');
+            }
+
+            // Iniciar transacción para garantizar la integridad de los datos
+            $db = \Config\Database::connect();
+            $db->transStart();
+
+            try {
+                // Eliminar temas asociados
+                $this->temaModel->where('unidad_id', $unidad_id)->delete();
+
+                // Eliminar la unidad
+                if (!$this->unidadModel->delete($unidad_id)) {
+                    throw new \RuntimeException('Error al eliminar la unidad.');
+                }
+
+                // Confirmar transacción
+                $db->transComplete();
+
+                return redirectView("materias/unidades/{$materia_id}", null, [['Unidad eliminada exitosamente', 'success', 'center']], null);
+
+            } catch (\Exception $e) {
+                // Revertir cambios si hay algún error
+                $db->transRollback();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::eliminarUnidad] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return redirectView("materias/unidades/{$materia_id}", null, [['Error al eliminar la unidad: ' . $e->getMessage(), 'error', 'top-end']], null);
+        }
+    }
+
 
     // ... (métodos similares para editarUnidad, actualizarUnidad, eliminarUnidad)
     // ... (métodos para gestionar Temas: nuevoTema, guardarTema, etc.)
