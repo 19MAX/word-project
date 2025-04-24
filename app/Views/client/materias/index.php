@@ -82,7 +82,7 @@ Panel de Control - Mi Aplicación
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" class="text-center">No hay usuarios registrados.</td>
+                            <td colspan="5" class="text-center">No hay documentos registrados.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -233,14 +233,19 @@ Panel de Control - Mi Aplicación
 <?= $this->section('scripts') ?>
 <script>
     $(document).ready(function () {
-        $('#materiasTable').DataTable({
-            language: {
-                url: '<?=base_url("assets/js/spanishDatatables.json")?>'
-            }
-        });
+        <?php if (!empty($materias)): ?>
+            $('#materiasTable').DataTable({
+                language: {
+                    url: '<?=base_url("assets/js/spanishDatatables.json")?>'
+                }
+            });
+        <?php else: ?>
+            // Si no hay datos, simplemente aplicar estilos básicos o un mensaje
+            $('#materiasTable').addClass('table-empty');
+        <?php endif; ?>
     });
 
-    function confirmarEliminar(id,materia_id) {
+    function confirmarEliminar(id) {
         Swal.fire({
             title: '¿Estás seguro?',
             text: 'Todos los contenidos relacionados también se eliminarán.',
@@ -252,7 +257,7 @@ Panel de Control - Mi Aplicación
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = "<?= base_url('materias/eliminar/') ?> materia_id + id";
+                window.location.href = "<?= base_url('materias/eliminar/') ?>" + id;
             }
         });
     }
