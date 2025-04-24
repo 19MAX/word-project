@@ -22,7 +22,7 @@ class UsersSeeder extends Seeder
             [
                 'name'     => env('SEEDER_USER_NAME'),
                 'email'    => env('SEEDER_USER_EMAIL'),
-                'password' => $adminPassword,
+                'password' => $userPassword,
                 'role'     => env('SEEDER_USER_ROLE'),
             ],
         ];

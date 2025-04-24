@@ -138,7 +138,7 @@ class MateriasController extends BaseController
                 'nombre' => $nombre,
                 'ciclo' => $ciclo,
                 'descripcion' => $descripcion,
-                'usuario_id' => 2, // Ajusta según tu lógica para obtener el ID del usuario
+                'usuario_id' => session('user_id'), // Ajusta según tu lógica para obtener el ID del usuario
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
