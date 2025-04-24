@@ -17,13 +17,13 @@
         <!-- Sección de Usuarios - Solo visible para administradores -->
         <?php if ($role === 'admin'): ?>
             <li class="nav-item">
-                <a class="nav-link has-submenu" href="#" data-title="Usuarios" title="Usuarios">
+                <a class="nav-link has-submenu " href="#" data-title="Usuarios" title="Usuarios">
                     <i class="fas fa-users"></i>
                     <span class="nav-text">Usuarios</span>
                 </a>
-                <ul class="submenu">
+                <ul class="submenu <?= current_url() == base_url('admin/users') ? 'show' : '' ?>">
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= site_url('admin/users') ?>" data-title="Todos los usuarios"
+                        <a class="nav-link <?= current_url() == base_url('admin/users') ? 'active' : '' ?>" href="<?= site_url('admin/users') ?>" data-title="Todos los usuarios"
                             title="Todos los usuarios">
                             <i class="fa-solid fa-users-rays"></i>
                             <span class="nav-text">Todos los usuarios</span>
@@ -36,10 +36,10 @@
         <?php elseif ($role === 'user'): ?>
             <!-- Registrar Asistencia - Visible para todos -->
             <li class="nav-item">
-                <a class="nav-link" href="<?= site_url('materias') ?>" data-title="Registrar Asistencia"
+                <a class="nav-link <?= current_url() == base_url('materias') ? 'active' : '' ?>"  href="<?= site_url('materias') ?>" data-title="Registrar Asistencia"
                     title="Registrar Asistencia">
                     <i class="fa-solid fa-book"></i>
-                    <span class="nav-text">Mis Documentos</span>
+                    <span class="nav-text">Todos los documentos</span>
                 </a>
             </li>
 
