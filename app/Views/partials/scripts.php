@@ -96,7 +96,13 @@
             '.bg-white',
             'input:not([type="checkbox"]):not([type="radio"])',
             'textarea',
-            'select'
+            'select',
+            '.accordion',
+            '.accordion-item',
+            '.accordion-button',
+            '.accordion-header',
+            '.accordion-body',
+            '.accordion-collapse',
         ];
 
         // Aplicar a todos los elementos necesarios
@@ -187,7 +193,13 @@
             '.bg-white',
             'input:not([type="checkbox"]):not([type="radio"])',
             'textarea',
-            'select'
+            'select',
+            '.accordion',
+            '.accordion-item',
+            '.accordion-button',
+            '.accordion-header',
+            '.accordion-body',
+            '.accordion-collapse'
         ];
 
         // Quitar de todos los elementos necesarios
@@ -195,6 +207,29 @@
             document.querySelectorAll(selector).forEach(item => {
                 item.classList.remove('dark-mode');
             });
+        });
+
+        // Restaurar estilos específicos para acordeones
+        document.querySelectorAll('.accordion-item').forEach(item => {
+            item.style.backgroundColor = '';
+            item.style.borderColor = '';
+        });
+
+        document.querySelectorAll('.accordion-button').forEach(button => {
+            button.style.backgroundColor = '';
+            button.style.color = '';
+        });
+
+        document.querySelectorAll('.accordion-body').forEach(body => {
+            body.style.backgroundColor = '';
+            body.style.color = '';
+        });
+
+        // Restaurar estilos de list-group
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.style.backgroundColor = '';
+            item.style.borderColor = '';
+            item.style.color = '';
         });
 
         // Elementos específicos del modal que necesitan quitar estilo oscuro

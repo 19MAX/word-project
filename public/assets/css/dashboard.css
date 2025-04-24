@@ -652,3 +652,77 @@ body.ready {
 .dark-mode .daterangepicker .calendar-table .week:hover span {
     color: #f8fafc;
 }
+
+/* Agregar estas reglas a tu archivo CSS para el modo oscuro */
+
+/* Acordeones en modo oscuro */
+.dark-mode .accordion-item {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+.dark-mode .accordion-button {
+    background-color: #212529;
+    color: #f8fafc;
+}
+
+.dark-mode .accordion-button:not(.collapsed) {
+    background-color: #212529;
+    color: #f8fafc;
+}
+
+.dark-mode .accordion-button::after {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.dark-mode .accordion-body {
+    background-color: #212529;
+    color: #f8fafc;
+}
+
+/* List groups en modo oscuro */
+.dark-mode .list-group-item {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+
+
+/* PAGINACIÓN DARK */
+
+/* Estilos para la paginación de DataTables en modo oscuro */
+.dark-mode .dt-paging .pagination .page-item .page-link {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+.dark-mode .dt-paging .pagination .page-item.active .page-link {
+    background-color: #2f86ce;
+    border-color: #fff;
+    color: #FFF;
+}
+
+.dark-mode .dt-paging .pagination .page-item.disabled .page-link {
+    background-color: #343a40;
+    border-color: #f0f0f0;
+    color: #ffffff;
+}
+
+.dark-mode .dt-paging .pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+    background-color: #334155;
+    border-color: #475569;
+    color: #f8fafc;
+}
+
+/* Para el contenedor de la paginación */
+.dark-mode .dt-layout-end {
+    background-color: #343a40;
+    color: #f8fafc;
+}
+
+/* Para asegurar que el texto sea visible */
+.dark-mode .dt-paging nav {
+    color: #f8fafc;
+}
