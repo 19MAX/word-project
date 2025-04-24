@@ -3,17 +3,20 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-// use App\Models\UsersModel;
+use App\Models\MateriaModel;
+use App\Models\UsersModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class DashboardController extends BaseController
 {
     protected $userModel;
+    protected $materiasModel;
 
     // Inicializar los modelos en el constructor
     public function __construct()
     {
-        // $this->userModel = new UsersModel();
+        $this->userModel = new UsersModel();
+        $this->materiasModel = new MateriaModel();
     }
 
     public function index()
@@ -26,19 +29,20 @@ class DashboardController extends BaseController
         // Obtener el rol del usuario desde la sesión
         $userRole = session()->get('role'); // Ajusta esto según cómo tengas almacenado el rol en tu sesión
 
-        // $data = [
-        //     'totalUsuarios' => $this->userModel->countAll(),
-        // ];
+        $data = [
+            'totalUsuarios' => $this->userModel->countAllUsers(),
+            'totalDocumentos' => $this->materiasModel->countAllMaterias(),
+        ];
 
         // Redireccionar según el rol
         switch ($userRole) {
             case 'admin':
-                return view('admin/dashboard'); // Vista para administradores
+                return view('admin/dashboard',$data); // Vista para administradores
                 break;
 
             case 'user':
 
-                return view('client/dashboard');
+                return view('client/dashboard',$data);
 
                 break;
 

@@ -107,4 +107,10 @@ class MateriaModel extends Model
             ->countAllResults() > 0;
     }
 
+
+    public function countAllMaterias()
+    {
+        return $this->countAll();
+    }
+
 }
