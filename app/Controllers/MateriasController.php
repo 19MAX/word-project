@@ -12,6 +12,7 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Shared\Converter;
 use PhpOffice\PhpWord\Style\Font;
 use PhpOffice\PhpWord\Style\Paragraph;
+use PhpOffice\PhpWord\Style\Language;
 
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -119,11 +120,11 @@ class MateriasController extends BaseController
                 ],
                 'ciclo' => [
                     'label' => 'Ciclo',
-                    'rules' => 'permit_empty|max_length[20]',
+                    'rules' => 'permit_empty',
                 ],
                 'descripcion' => [
                     'label' => 'Descripción',
-                    'rules' => 'permit_empty|max_length[500]',
+                    'rules' => 'required',
                 ],
             ];
 
@@ -207,11 +208,11 @@ class MateriasController extends BaseController
                 ],
                 'ciclo' => [
                     'label' => 'Ciclo',
-                    'rules' => 'permit_empty|max_length[20]',
+                    'rules' => 'permit_empty',
                 ],
                 'descripcion' => [
                     'label' => 'Descripción',
-                    'rules' => 'permit_empty|max_length[500]',
+                    'rules' => 'permit_empty',
                 ],
             ];
 
@@ -854,7 +855,7 @@ class MateriasController extends BaseController
                 ],
                 'objetivo' => [
                     'label' => 'Objetivo de la Unidad',
-                    'rules' => 'required|min_length[10]|max_length[500]',
+                    'rules' => 'required',
                 ],
             ];
 
@@ -1449,6 +1450,8 @@ class MateriasController extends BaseController
 
             // Crear nuevo documento Word
             $phpWord = new PhpWord();
+
+            $phpWord->getSettings()->setThemeFontLang(new Language(Language::ES_ES));
             // Agregar esto al inicio del método, después de crear $phpWord
             $phpWord->addTitleStyle(1, ['size' => 16, 'bold' => true], ['alignment' => 'center']);
             $phpWord->addTitleStyle(2, ['size' => 14, 'bold' => true], ['spaceAfter' => 240]);
@@ -1488,19 +1491,20 @@ class MateriasController extends BaseController
 
             // 5. Unidades Didácticas
             $section->addText('Distribución en Unidades Didácticas:', $fontStyleBold);
-            $currentUnidad = null;
             foreach ($materia['unidades'] as $unidad) {
-                if (!isset($currentUnidad) || $currentUnidad != $unidad['numero_unidad']) {
-                    $currentUnidad = $unidad['numero_unidad'];
-                    $section->addText("Unidad {$unidad['numero_unidad']}: {$unidad['nombre']}", $fontStyleBold);
-                    $section->addText("Objetivo: {$unidad['objetivo']}");
+                $section->addText("Unidad {$unidad['numero_unidad']}: {$unidad['nombre']}", $fontStyleBold);
+                $section->addText("Objetivo: {$unidad['objetivo']}");
+
+                // Agregar los temas de cada unidad
+                if (!empty($unidad['temas'])) {
+                    foreach ($unidad['temas'] as $tema) {
+                        $section->addText("   - Tema {$tema['numero_tema']}: {$tema['nombre']}");
+                    }
                 }
 
-                if (!empty($unidad['tema_nombre'])) {
-                    $section->addText("   - Tema {$unidad['numero_tema']}: {$unidad['tema_nombre']}");
-                }
+                $section->addTextBreak(1);
             }
-            $section->addTextBreak(2);
+            $section->addTextBreak(1);
 
             // 6. Bibliografía
             $section->addText('Bibliografía', $fontStyleBold);
