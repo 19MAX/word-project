@@ -33,8 +33,13 @@
             darkModeToggle.checked = true;
         }
 
-        // Verificar estado del sidebar
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        // Colapsar sidebar por defecto
+        if (localStorage.getItem('sidebarCollapsed') === null) {
+            // Si no existe preferencia guardada, colapsar por defecto
+            toggleSidebar(false);
+            localStorage.setItem('sidebarCollapsed', 'true');
+        } else if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            // Si existe preferencia guardada y es 'true', colapsar
             toggleSidebar(false);
         }
     }
@@ -378,4 +383,6 @@
             showAlert(<?= json_encode($type) ?>, <?= json_encode($msg) ?>, <?= json_encode($position) ?>);
         <?php endforeach; ?>
     <?php endif; ?>
+
+    const base_url = "<?= base_url('') ?>";
 </script>

@@ -49,6 +49,3 @@ Formulario de Documentos
 </div>
 
 <?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<?= $this->endSection() ?>

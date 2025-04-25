@@ -38,7 +38,9 @@ $routes->post('materias/guardar', 'MateriasController::guardar');
 $routes->get('materias/editar/(:num)', 'MateriasController::editar/$1');
 $routes->post('materias/actualizar/(:num)', 'MateriasController::actualizar/$1');
 $routes->get('materias/eliminar/(:num)', 'MateriasController::eliminar/$1');
-$routes->get('materias/(:num)', 'MateriasController::ver/$1');
+$routes->get('materias/obtener/(:num)', 'MateriasController::obtener/$1');
+$routes->get('materias/siguiente-numero-objetivo/(:num)', 'MateriasController::siguienteNumeroObjetivo/$1');
+$routes->get('materias/obtener-objetivo/(:num)', 'MateriasController::obtenerObjetivo/$1');
 
 // Secciones
 $routes->group('materias', function ($routes) {

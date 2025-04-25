@@ -726,3 +726,26 @@ body.ready {
 .dark-mode .dt-paging nav {
     color: #f8fafc;
 }
+
+.truncate-hover {
+    display: inline-block;
+    max-width: 150px;
+    /* Ajusta el ancho máximo */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    z-index: 1;
+}
+
+.truncate-hover:hover {
+    white-space: normal;
+    background: #f8f9fa;
+    /* Opcional: color de fondo al pasar el mouse */
+    padding: 4px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}

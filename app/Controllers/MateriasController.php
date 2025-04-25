@@ -98,6 +98,14 @@ class MateriasController extends BaseController
 
     public function guardar()
     {
+        // Verificamos si es una petición AJAX
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $nombre = trim($this->request->getPost('nombre'));
         $ciclo = trim($this->request->getPost('ciclo'));
         $descripcion = trim($this->request->getPost('descripcion'));
@@ -106,7 +114,7 @@ class MateriasController extends BaseController
             'nombre' => $nombre,
             'ciclo' => $ciclo,
             'descripcion' => $descripcion,
-            'usuario_id' => session("user_id"), // Asegúrate de manejar correctamente el ID del usuario
+            'usuario_id' => session("user_id"),
         ];
 
         try {
@@ -131,7 +139,11 @@ class MateriasController extends BaseController
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView('materias', $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
             // Prepara los datos para insertar
@@ -139,7 +151,7 @@ class MateriasController extends BaseController
                 'nombre' => $nombre,
                 'ciclo' => $ciclo,
                 'descripcion' => $descripcion,
-                'usuario_id' => session('user_id'), // Ajusta según tu lógica para obtener el ID del usuario
+                'usuario_id' => session('user_id'),
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
@@ -150,11 +162,20 @@ class MateriasController extends BaseController
                 throw new \RuntimeException('No se pudo insertar la materia.');
             }
 
-            return redirectView('materias', null, [['Materia creada exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Materia creada exitosamente',
+                'data' => [
+                    'materia_id' => $inserted
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            log_message('error', '[MateriasController::insertar] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView('materias', null, [['Error al crear la materia: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
+            log_message('error', '[MateriasController::guardar] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al crear la materia: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -180,12 +201,19 @@ class MateriasController extends BaseController
 
     public function actualizar($id)
     {
+        // Verificamos si es una petición AJAX
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $nombre = trim($this->request->getPost('nombre'));
         $ciclo = trim($this->request->getPost('ciclo'));
         $descripcion = trim($this->request->getPost('descripcion'));
 
         $data = [
-            'materia_id' => $id,
             'nombre' => $nombre,
             'ciclo' => $ciclo,
             'descripcion' => $descripcion
@@ -194,13 +222,7 @@ class MateriasController extends BaseController
         try {
             $validation = \Config\Services::validation();
 
-            // Verifica si existe la materia
-            $materia = $this->materiaModel->find($id);
-            if (!$materia) {
-                throw new \RuntimeException('Materia no encontrada.');
-            }
-
-            // Reglas de validación
+            // Reglas de validación (pueden ser las mismas que en guardar)
             $rules = [
                 'nombre' => [
                     'label' => 'Nombre de la Materia',
@@ -212,17 +234,21 @@ class MateriasController extends BaseController
                 ],
                 'descripcion' => [
                     'label' => 'Descripción',
-                    'rules' => 'permit_empty',
+                    'rules' => 'required',
                 ],
             ];
 
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView('materias', $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
-            // Actualiza la materia
+            // Prepara los datos para actualizar
             $updateData = [
                 'nombre' => $nombre,
                 'ciclo' => $ciclo,
@@ -230,17 +256,27 @@ class MateriasController extends BaseController
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
+            // Actualiza la materia
             $updated = $this->materiaModel->update($id, $updateData);
 
             if (!$updated) {
                 throw new \RuntimeException('No se pudo actualizar la materia.');
             }
 
-            return redirectView('materias', null, [['Materia actualizada exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Materia actualizada exitosamente',
+                'data' => [
+                    'materia_id' => $id
+                ]
+            ]);
 
         } catch (\Exception $e) {
             log_message('error', '[MateriasController::actualizar] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView('materias', null, [['Error al actualizar la materia: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al actualizar la materia: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -289,21 +325,21 @@ class MateriasController extends BaseController
         }
     }
 
-    public function ver($id)
+    public function obtener($id)
     {
-        $usuarioId = session("user_id");
-        $materia = $this->materiaModel->getMateriaWithRelations($id, $usuarioId);
+        $materia = $this->materiaModel->find($id);
 
         if (!$materia) {
-            return redirect()->to('/materias')->with('error', 'Materia no encontrada');
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Materia no encontrada'
+            ]);
         }
 
-        $data = [
-            'title' => $materia['nombre'],
-            'materia' => $materia
-        ];
-
-        return view('client/materias/view', $data);
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $materia
+        ]);
     }
 
     /**
@@ -315,9 +351,9 @@ class MateriasController extends BaseController
         $usuarioId = session("user_id");
 
         // Verificar que la materia pertenece al usuario
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         $materia = $this->materiaModel->find($materia_id);
         $objetivos = $this->objetivoModel->getObjetivosWithResultados($materia_id);
@@ -335,9 +371,9 @@ class MateriasController extends BaseController
     {
         $usuarioId = session("user_id");
 
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         $materia = $this->materiaModel->find($materia_id);
         $ultimoNumero = $this->objetivoModel->where('materia_id', $materia_id)
@@ -356,6 +392,14 @@ class MateriasController extends BaseController
 
     public function guardarObjetivo($materia_id)
     {
+        // Verificar si es una petición AJAX
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $numero_objetivo = trim($this->request->getPost('numero_objetivo'));
         $descripcion = trim($this->request->getPost('descripcion'));
         $resultado = trim($this->request->getPost('resultado'));
@@ -364,16 +408,19 @@ class MateriasController extends BaseController
             'materia_id' => $materia_id,
             'numero_objetivo' => $numero_objetivo,
             'descripcion' => $descripcion,
-            'resultado' => $resultado // Este campo es para el formulario, no para la BD directamente
+            'resultado' => $resultado
         ];
 
         try {
             $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
+            /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => 'No tienes permiso para modificar esta materia.'
+                ]);
+            } */
 
             $validation = \Config\Services::validation();
 
@@ -396,7 +443,11 @@ class MateriasController extends BaseController
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/nuevo-objetivo/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
             // Iniciar transacción
@@ -436,7 +487,13 @@ class MateriasController extends BaseController
                 // Confirmar transacción
                 $db->transComplete();
 
-                return redirectView("materias/nuevo-objetivo/{$materia_id}", null, [['Objetivo guardado exitosamente', 'success', 'center']], null);
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Objetivo guardado exitosamente',
+                    'data' => [
+                        'objetivo_id' => $objetivo_id
+                    ]
+                ]);
 
             } catch (\Exception $e) {
                 // Revertir cambios si hay algún error
@@ -446,44 +503,23 @@ class MateriasController extends BaseController
 
         } catch (\Exception $e) {
             log_message('error', '[MateriasController::guardarObjetivo] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/nuevo-objetivo/{$materia_id}", null, [['Error al guardar el objetivo: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al guardar el objetivo: ' . $e->getMessage()
+            ]);
         }
     }
 
-    /**
-     * Editar un objetivo existente
-     */
-    public function editarObjetivo($materia_id, $objetivo_id)
-    {
-        $usuarioId = session("user_id");
-
-        // Verificar que la materia pertenece al usuario
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-            return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
-
-        $materia = $this->materiaModel->find($materia_id);
-        $objetivo = $this->objetivoModel->getObjetivoWithResultado($objetivo_id);
-
-        if (!$objetivo) {
-            return redirect()->to("/materias/objetivos/{$materia_id}")->with('error', 'Objetivo no encontrado');
-        }
-
-        $data = [
-            'title' => 'Editar Objetivo',
-            'materia' => $materia,
-            'objetivo' => $objetivo,
-            'validation' => \Config\Services::validation()
-        ];
-
-        return view('client/materias/form_objetivo', $data);
-    }
-
-    /**
-     * Actualizar un objetivo existente
-     */
     public function actualizarObjetivo($materia_id, $objetivo_id)
     {
+        // Verificar si es una petición AJAX
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $numero_objetivo = trim($this->request->getPost('numero_objetivo'));
         $descripcion = trim($this->request->getPost('descripcion'));
         $resultado = trim($this->request->getPost('resultado'));
@@ -493,21 +529,27 @@ class MateriasController extends BaseController
             'materia_id' => $materia_id,
             'numero_objetivo' => $numero_objetivo,
             'descripcion' => $descripcion,
-            'resultado' => $resultado // Este campo es para el formulario, no para la BD directamente
+            'resultado' => $resultado
         ];
 
         try {
             $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
+            /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => 'No tienes permiso para modificar esta materia.'
+                ]);
+            } */
 
             // Verifica si existe el objetivo
             $objetivo = $this->objetivoModel->find($objetivo_id);
             if (!$objetivo || $objetivo['materia_id'] != $materia_id) {
-                throw new \RuntimeException('Objetivo no encontrado.');
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Objetivo no encontrado.'
+                ]);
             }
 
             $validation = \Config\Services::validation();
@@ -531,7 +573,11 @@ class MateriasController extends BaseController
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/objetivos/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
             // Iniciar transacción
@@ -599,7 +645,13 @@ class MateriasController extends BaseController
                 // Confirmar transacción
                 $db->transComplete();
 
-                return redirectView("materias/objetivos/{$materia_id}", null, [['Objetivo actualizado exitosamente', 'success', 'center']], null);
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Objetivo actualizado exitosamente',
+                    'data' => [
+                        'objetivo_id' => $objetivo_id
+                    ]
+                ]);
 
             } catch (\Exception $e) {
                 // Revertir cambios si hay algún error
@@ -609,22 +661,22 @@ class MateriasController extends BaseController
 
         } catch (\Exception $e) {
             log_message('error', '[MateriasController::actualizarObjetivo] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/objetivos/{$materia_id}", null, [['Error al actualizar el objetivo: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al actualizar el objetivo: ' . $e->getMessage()
+            ]);
         }
     }
 
-    /**
-     * Eliminar un objetivo
-     */
     public function eliminarObjetivo($materia_id, $objetivo_id)
     {
         try {
             $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+            /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
                 throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
+            } */
 
             // Verificar que el objetivo existe y pertenece a la materia
             $objetivo = $this->objetivoModel->find($objetivo_id);
@@ -662,6 +714,93 @@ class MateriasController extends BaseController
         }
     }
 
+    public function obtenerObjetivo($objetivo_id)
+    {
+        // Verificar si es una petición AJAX
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
+        try {
+            $usuarioId = session("user_id");
+            $objetivo = $this->objetivoModel->getObjetivoWithResultado($objetivo_id);
+
+            if (!$objetivo) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Objetivo no encontrado'
+                ]);
+            }
+
+            // Verificar que la materia pertenece al usuario
+            /* if (!$this->materiaModel->belongsToUser($objetivo['materia_id'], $usuarioId)) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => 'No tienes permiso para acceder a este objetivo'
+                ]);
+            } */
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $objetivo
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::obtenerObjetivo] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al obtener el objetivo'
+            ]);
+        }
+    }
+
+    public function siguienteNumeroObjetivo($materia_id)
+    {
+        // Verificar si es una petición AJAX
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
+        try {
+            $usuarioId = session("user_id");
+
+            // Verificar que la materia pertenece al usuario
+            /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => 'No tienes permiso para acceder a esta materia.'
+                ]);
+            } */
+
+            // Obtener el último número de objetivo para esta materia
+            $ultimoNumero = $this->objetivoModel
+                ->where('materia_id', $materia_id)
+                ->selectMax('numero_objetivo')
+                ->get()
+                ->getRow()
+                ->numero_objetivo;
+
+            $siguienteNumero = $ultimoNumero ? $ultimoNumero + 1 : 1;
+
+            return $this->response->setJSON([
+                'success' => true,
+                'siguiente_numero' => $siguienteNumero
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::siguienteNumeroObjetivo] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al obtener el siguiente número de objetivo'
+            ]);
+        }
+    }
 
     /**
      * SECCIÓN UNIDADES
@@ -670,9 +809,9 @@ class MateriasController extends BaseController
     {
         $usuarioId = session("user_id");
 
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         $materia = $this->materiaModel->find($materia_id);
         $unidades = $this->unidadModel->getUnidadesWithTemas($materia_id);
@@ -690,9 +829,9 @@ class MateriasController extends BaseController
     {
         $usuarioId = session("user_id");
 
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-            return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        /*   if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+              return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
+          } */
 
         $materia = $this->materiaModel->find($materia_id);
         $ultimoNumero = $this->unidadModel->where('materia_id', $materia_id)
@@ -716,9 +855,9 @@ class MateriasController extends BaseController
         $usuarioId = session("user_id");
 
         // Verificar permisos
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-            return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        /*  if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
+         } */
 
         // Verificar que la unidad existe y pertenece a la materia
         $unidad = $this->unidadModel->find($unidad_id);
@@ -743,6 +882,13 @@ class MateriasController extends BaseController
      */
     public function guardarUnidad($materia_id)
     {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $numero_unidad = trim($this->request->getPost('numero_unidad'));
         $nombre = trim($this->request->getPost('nombre'));
         $objetivo = trim($this->request->getPost('objetivo'));
@@ -755,38 +901,36 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = session("user_id");
-
-            // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
-
             $validation = \Config\Services::validation();
 
-            // Reglas de validación
             $rules = [
                 'numero_unidad' => [
                     'label' => 'Número de Unidad',
-                    'rules' => 'required|numeric',
+                    'rules' => 'required|numeric|is_unique[unidades.numero_unidad,materia_id,' . $materia_id . ']',
                 ],
                 'nombre' => [
                     'label' => 'Nombre de la Unidad',
-                    'rules' => 'required',
+                    'rules' => 'required|min_length[3]|max_length[100]',
                 ],
                 'objetivo' => [
                     'label' => 'Objetivo de la Unidad',
                     'rules' => 'required',
+                    'errors' => [
+                        'required' => 'El objetivo de la unidad es obligatorio'
+                    ]
                 ],
             ];
 
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/unidades/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
-            // Preparar datos para insertar
             $insertData = [
                 'materia_id' => $materia_id,
                 'numero_unidad' => $numero_unidad,
@@ -795,18 +939,26 @@ class MateriasController extends BaseController
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
-            // Insertar unidad
             $inserted = $this->unidadModel->insert($insertData);
 
             if (!$inserted) {
                 throw new \RuntimeException('No se pudo guardar la unidad.');
             }
 
-            return redirectView("materias/unidades/{$materia_id}", null, [['Unidad creada exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Unidad creada exitosamente',
+                'data' => [
+                    'unidad_id' => $inserted
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            log_message('error', '[MateriasController::guardarUnidad] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/unidades/{$materia_id}", null, [['Error al crear la unidad: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
+            log_message('error', '[MateriasController::guardarUnidad] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al crear la unidad: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -815,6 +967,13 @@ class MateriasController extends BaseController
      */
     public function actualizarUnidad($materia_id, $unidad_id)
     {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $numero_unidad = trim($this->request->getPost('numero_unidad'));
         $nombre = trim($this->request->getPost('nombre'));
         $objetivo = trim($this->request->getPost('objetivo'));
@@ -828,44 +987,41 @@ class MateriasController extends BaseController
         ];
 
         try {
-            $usuarioId = session("user_id");
-
-            // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
-
-            // Verificar si existe la unidad
             $unidad = $this->unidadModel->find($unidad_id);
             if (!$unidad || $unidad['materia_id'] != $materia_id) {
-                throw new \RuntimeException('Unidad no encontrada.');
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Unidad no encontrada'
+                ]);
             }
 
             $validation = \Config\Services::validation();
 
-            // Reglas de validación
             $rules = [
                 'numero_unidad' => [
                     'label' => 'Número de Unidad',
-                    'rules' => 'required|numeric',
+                    'rules' => "required|numeric|is_unique[unidades.numero_unidad,materia_id,$materia_id,unidad_id,$unidad_id]",
                 ],
                 'nombre' => [
                     'label' => 'Nombre de la Unidad',
-                    'rules' => 'required|min_length[3]|max_length[100]',
+                    'rules' => 'required|min_length[3]|max_length[100]'
                 ],
                 'objetivo' => [
                     'label' => 'Objetivo de la Unidad',
-                    'rules' => 'required',
+                    'rules' => 'required'
                 ],
             ];
 
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/unidades/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
-            // Actualizar unidad
             $updateData = [
                 'numero_unidad' => $numero_unidad,
                 'nombre' => $nombre,
@@ -879,11 +1035,20 @@ class MateriasController extends BaseController
                 throw new \RuntimeException('No se pudo actualizar la unidad.');
             }
 
-            return redirectView("materias/unidades/{$materia_id}", null, [['Unidad actualizada exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Unidad actualizada exitosamente',
+                'data' => [
+                    'unidad_id' => $unidad_id
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            log_message('error', '[MateriasController::actualizarUnidad] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/unidades/{$materia_id}", null, [['Error al actualizar la unidad: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
+            log_message('error', '[MateriasController::actualizarUnidad] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al actualizar la unidad: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -896,9 +1061,9 @@ class MateriasController extends BaseController
             $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+            /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
                 throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
+            } */
 
             // Verificar que la unidad existe y pertenece a la materia
             $unidad = $this->unidadModel->find($unidad_id);
@@ -936,6 +1101,38 @@ class MateriasController extends BaseController
         }
     }
 
+    public function obtenerUnidad($unidad_id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
+        try {
+            $unidad = $this->unidadModel->find($unidad_id);
+
+            if (!$unidad) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Unidad no encontrada'
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $unidad
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::obtenerUnidad] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al obtener la unidad'
+            ]);
+        }
+    }
+
 
 
     /**
@@ -950,9 +1147,9 @@ class MateriasController extends BaseController
         $usuarioId = session("user_id");
 
         // Verificar permisos
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         // Verificar que la unidad pertenece a la materia
         $unidad = $this->unidadModel->find($unidad_id);
@@ -981,50 +1178,54 @@ class MateriasController extends BaseController
      */
     public function guardarTema($materia_id, $unidad_id)
     {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $numero_tema = trim($this->request->getPost('numero_tema'));
         $nombre = trim($this->request->getPost('nombre'));
 
         $data = [
             'unidad_id' => $unidad_id,
             'numero_tema' => $numero_tema,
-            'nombre' => $nombre,
+            'nombre' => $nombre
         ];
 
         try {
-            $usuarioId = session("user_id");
-
-            // Verificar permisos
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
-
-            // Verificar que la unidad pertenece a la materia
             $unidad = $this->unidadModel->find($unidad_id);
             if (!$unidad || $unidad['materia_id'] != $materia_id) {
-                throw new \RuntimeException('Unidad no encontrada.');
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Unidad no encontrada'
+                ]);
             }
 
             $validation = \Config\Services::validation();
 
-            // Reglas de validación
             $rules = [
                 'numero_tema' => [
                     'label' => 'Número de Tema',
-                    'rules' => 'required|numeric',
+                    'rules' => "required|numeric",
                 ],
                 'nombre' => [
                     'label' => 'Nombre del Tema',
-                    'rules' => 'required',
+                    'rules' => 'required|min_length[3]|max_length[100]',
                 ],
             ];
 
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/unidades/{$materia_id}/{$unidad_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
-            // Preparar datos para insertar
             $insertData = [
                 'unidad_id' => $unidad_id,
                 'numero_tema' => $numero_tema,
@@ -1032,18 +1233,26 @@ class MateriasController extends BaseController
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
-            // Insertar tema
             $inserted = $this->temaModel->insert($insertData);
 
             if (!$inserted) {
                 throw new \RuntimeException('No se pudo guardar el tema.');
             }
 
-            return redirectView("materias/unidades/{$materia_id}", null, [['Tema creado exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Tema creado exitosamente',
+                'data' => [
+                    'tema_id' => $inserted
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            log_message('error', '[MateriasController::guardarTema] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/unidades/{$materia_id}/{$unidad_id}", null, [['Error al crear el tema: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
+            log_message('error', '[MateriasController::guardarTema] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al crear el tema: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -1055,9 +1264,9 @@ class MateriasController extends BaseController
         $usuarioId = session("user_id");
 
         // Verificar permisos
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         // Verificar que la unidad pertenece a la materia
         $unidad = $this->unidadModel->find($unidad_id);
@@ -1089,59 +1298,63 @@ class MateriasController extends BaseController
      */
     public function actualizarTema($materia_id, $unidad_id, $tema_id)
     {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $numero_tema = trim($this->request->getPost('numero_tema'));
         $nombre = trim($this->request->getPost('nombre'));
-        $descripcion = trim($this->request->getPost('descripcion'));
 
         $data = [
             'tema_id' => $tema_id,
             'unidad_id' => $unidad_id,
             'numero_tema' => $numero_tema,
-            'nombre' => $nombre,
-            'descripcion' => $descripcion,
+            'nombre' => $nombre
         ];
 
         try {
-            $usuarioId = session("user_id");
-
-            // Verificar permisos
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
-
-            // Verificar que la unidad pertenece a la materia
-            $unidad = $this->unidadModel->find($unidad_id);
-            if (!$unidad || $unidad['materia_id'] != $materia_id) {
-                throw new \RuntimeException('Unidad no encontrada.');
-            }
-
-            // Verificar que el tema existe y pertenece a la unidad
             $tema = $this->temaModel->find($tema_id);
             if (!$tema || $tema['unidad_id'] != $unidad_id) {
-                throw new \RuntimeException('Tema no encontrado.');
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Tema no encontrado'
+                ]);
+            }
+
+            $unidad = $this->unidadModel->find($unidad_id);
+            if (!$unidad || $unidad['materia_id'] != $materia_id) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Unidad no encontrada'
+                ]);
             }
 
             $validation = \Config\Services::validation();
 
-            // Reglas de validación
             $rules = [
                 'numero_tema' => [
                     'label' => 'Número de Tema',
-                    'rules' => 'required|numeric',
+                    'rules' => "required|numeric",
                 ],
                 'nombre' => [
                     'label' => 'Nombre del Tema',
-                    'rules' => 'required|min_length[3]|max_length[100]',
+                    'rules' => 'required|min_length[3]|max_length[100]'
                 ],
             ];
 
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/editar-tema/{$materia_id}/{$unidad_id}/{$tema_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
-            // Actualizar tema
             $updateData = [
                 'numero_tema' => $numero_tema,
                 'nombre' => $nombre,
@@ -1154,11 +1367,20 @@ class MateriasController extends BaseController
                 throw new \RuntimeException('No se pudo actualizar el tema.');
             }
 
-            return redirectView("materias/unidades/{$materia_id}", null, [['Tema actualizado exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Tema actualizado exitosamente',
+                'data' => [
+                    'tema_id' => $tema_id
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            log_message('error', '[MateriasController::actualizarTema] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/editar-tema/{$materia_id}/{$unidad_id}/{$tema_id}", null, [['Error al actualizar el tema: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
+            log_message('error', '[MateriasController::actualizarTema] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al actualizar el tema: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -1171,9 +1393,9 @@ class MateriasController extends BaseController
             $usuarioId = session("user_id");
 
             // Verificar permisos
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+            /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
                 throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
+            } */
 
             // Verificar que la unidad pertenece a la materia
             $unidad = $this->unidadModel->find($unidad_id);
@@ -1207,9 +1429,9 @@ class MateriasController extends BaseController
     {
         $usuarioId = session("user_id");
 
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         $materia = $this->materiaModel->find($materia_id);
         $bibliografias = $this->bibliografiaModel->where('materia_id', $materia_id)->findAll();
@@ -1227,9 +1449,9 @@ class MateriasController extends BaseController
     {
         $usuarioId = session("user_id");
 
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         $materia = $this->materiaModel->find($materia_id);
 
@@ -1242,62 +1464,75 @@ class MateriasController extends BaseController
         return view('client/materias/form_bibliografia', $data);
     }
 
-
-    /**
-     * Guardar nueva bibliografía
-     */
     public function guardarBibliografia($materia_id)
     {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $referencia = trim($this->request->getPost('referencia'));
+        $enlace = trim($this->request->getPost('enlace'));
 
         $data = [
             'materia_id' => $materia_id,
-            'referencia' => $referencia
+            'referencia' => $referencia,
+            'enlace' => $enlace
         ];
 
         try {
-            $usuarioId = session("user_id");
-
-            // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
-
             $validation = \Config\Services::validation();
 
-            // Reglas de validación
             $rules = [
                 'referencia' => [
-                    'label' => 'Descripción',
+                    'label' => 'Referencia',
                     'rules' => 'required',
                 ],
+                'enlace' => [
+                    'label' => 'Enlace',
+                    'rules' => 'permit_empty|valid_url',
+                ]
             ];
 
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/nueva-bibliografia/{$materia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'create');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
-            // Preparar datos para insertar
             $insertData = [
                 'materia_id' => $materia_id,
                 'referencia' => $referencia,
+                'enlace' => $enlace,
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
-            // Insertar bibliografía
             $inserted = $this->bibliografiaModel->insert($insertData);
 
             if (!$inserted) {
                 throw new \RuntimeException('No se pudo guardar la referencia bibliográfica.');
             }
 
-            return redirectView("materias/bibliografia/{$materia_id}", null, [['Referencia bibliográfica guardada exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Referencia creada exitosamente',
+                'data' => [
+                    'bibliografia_id' => $inserted
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            log_message('error', '[MateriasController::guardarBibliografia] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/nueva-bibliografia/{$materia_id}", null, [['Error al guardar la referencia: ' . $e->getMessage(), 'error', 'top-end']], $data, 'create');
+            log_message('error', '[MateriasController::guardarBibliografia] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al guardar la referencia: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -1309,9 +1544,9 @@ class MateriasController extends BaseController
         $usuarioId = session("user_id");
 
         // Verificar que la materia pertenece al usuario
-        if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+        /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
             return redirect()->to('/materias')->with('error', 'Acceso no autorizado');
-        }
+        } */
 
         // Verificar que la bibliografía existe y pertenece a la materia
         $bibliografia = $this->bibliografiaModel->find($bibliografia_id);
@@ -1342,62 +1577,84 @@ class MateriasController extends BaseController
      */
     public function actualizarBibliografia($materia_id, $bibliografia_id)
     {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
         $referencia = trim($this->request->getPost('referencia'));
+        $enlace = trim($this->request->getPost('enlace'));
 
         $data = [
             'bibliografia_id' => $bibliografia_id,
             'materia_id' => $materia_id,
             'referencia' => $referencia,
+            'enlace' => $enlace
         ];
 
         try {
-            $usuarioId = session("user_id");
-
-            // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
-                throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
-
-            // Verificar que la bibliografía existe y pertenece a la materia
             $bibliografia = $this->bibliografiaModel->find($bibliografia_id);
             if (!$bibliografia || $bibliografia['materia_id'] != $materia_id) {
-                throw new \RuntimeException('Referencia bibliográfica no encontrada.');
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Referencia bibliográfica no encontrada'
+                ]);
             }
 
             $validation = \Config\Services::validation();
 
-            // Reglas de validación (las mismas que en guardar)
             $rules = [
                 'referencia' => [
-                    'label' => 'Descripción',
+                    'label' => 'Referencia',
                     'rules' => 'required',
                 ],
+                'enlace' => [
+                    'label' => 'Enlace',
+                    'rules' => 'permit_empty|valid_url',
+                    'errors' => [
+                        'valid_url' => 'El enlace debe ser una URL válida'
+                    ]
+                ]
             ];
 
             $validation->setRules($rules);
 
             if (!$validation->run($data)) {
-                return redirectView("materias/editar-bibliografia/{$materia_id}/{$bibliografia_id}", $validation, [['Corrige los errores del formulario', 'error', 'top-end']], $data, 'update');
+                return $this->response->setStatusCode(422)->setJSON([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validation->getErrors()
+                ]);
             }
 
-            // Preparar datos para actualizar
             $updateData = [
                 'referencia' => $referencia,
+                'enlace' => $enlace,
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
-            // Actualizar bibliografía
             $updated = $this->bibliografiaModel->update($bibliografia_id, $updateData);
 
             if (!$updated) {
                 throw new \RuntimeException('No se pudo actualizar la referencia bibliográfica.');
             }
 
-            return redirectView("materias/bibliografia/{$materia_id}", null, [['Referencia bibliográfica actualizada exitosamente', 'success', 'center']], null);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Referencia actualizada exitosamente',
+                'data' => [
+                    'bibliografia_id' => $bibliografia_id
+                ]
+            ]);
 
         } catch (\Exception $e) {
-            log_message('error', '[MateriasController::actualizarBibliografia] ' . $e->getMessage() . ' - Trace: ' . $e->getTraceAsString());
-            return redirectView("materias/editar-bibliografia/{$materia_id}/{$bibliografia_id}", null, [['Error al actualizar la referencia: ' . $e->getMessage(), 'error', 'top-end']], $data, 'update');
+            log_message('error', '[MateriasController::actualizarBibliografia] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al actualizar la referencia: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -1410,9 +1667,9 @@ class MateriasController extends BaseController
             $usuarioId = session("user_id");
 
             // Verificar que la materia pertenece al usuario
-            if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
+            /* if (!$this->materiaModel->belongsToUser($materia_id, $usuarioId)) {
                 throw new \RuntimeException('No tienes permiso para modificar esta materia.');
-            }
+            } */
 
             // Verificar que la bibliografía existe y pertenece a la materia
             $bibliografia = $this->bibliografiaModel->find($bibliografia_id);
@@ -1432,6 +1689,39 @@ class MateriasController extends BaseController
             return redirectView("materias/bibliografia/{$materia_id}", null, [['Error al eliminar la referencia: ' . $e->getMessage(), 'error', 'top-end']], null);
         }
     }
+
+    public function obtenerBibliografia($bibliografia_id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Solicitud no válida'
+            ]);
+        }
+
+        try {
+            $bibliografia = $this->bibliografiaModel->find($bibliografia_id);
+
+            if (!$bibliografia) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Referencia bibliográfica no encontrada'
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $bibliografia
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', '[MateriasController::obtenerBibliografia] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Error al obtener la referencia'
+            ]);
+        }
+    }
+
 
 
     /**

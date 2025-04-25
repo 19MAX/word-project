@@ -5,238 +5,221 @@ Panel de Control - Mi Aplicación
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-<h2 class="mb-4"><i class="fa-solid fa-book"></i> Mis Documentos</h2>
-<div class="card">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold">Documentos </h6>
-        <a href="<?= base_url('materias/nueva') ?>" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Nuevo Documento
-        </a>
-    </div>
-    <div class="card-body">
-
-        <div class="table-responsive">
-            <table id="materiasTable" class="table table-bordered table-hover" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Ciclo</th>
-                        <th class="text-nowrap">Acciones</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php if (!empty($materias)): ?>
-                        <?php foreach ($materias as $materia): ?>
+<div class="row" style="min-height: calc(100vh - 180px);">
+    <!-- Card izquierda (Tabla) -->
+    <div class="col-md-7">
+        <div class="card h-100 shadow">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="materiasTable" class="table table-bordered table-hover table-sm">
+                        <thead>
                             <tr>
-                                <td><?= esc($materia['materia_id']) ?></td>
-                                <td><?= esc($materia['nombre']) ?></td>
-                                <td><?= esc($materia['descripcion']) ?></td>
-                                <td><?= esc($materia['ciclo']) ?></td>
-                                <td class="text-nowrap">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                                Acciones
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end shadow">
-                                                <!-- <li><a class="dropdown-item"
-                                                        href="<?= base_url('materias/') . $materia['materia_id'] ?>">
-                                                        <i class="fas fa-eye"></i> Ver</a></li> -->
-                                                <li><a class="dropdown-item"
-                                                        href="<?= base_url('materias/editar/') . $materia['materia_id'] ?>">
-                                                        <i class="fas fa-edit"></i> Editar</a></li>
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li><a class="dropdown-item"
-                                                        href="<?= base_url('materias/objetivos/') . $materia['materia_id'] ?>">
-                                                        <i class="fas fa-bullseye"></i> Objetivos</a></li>
-                                                <li><a class="dropdown-item"
-                                                        href="<?= base_url('materias/unidades/') . $materia['materia_id'] ?>">
-                                                        <i class="fas fa-layer-group"></i> Unidades</a></li>
-                                                <li><a class="dropdown-item"
-                                                        href="<?= base_url('materias/bibliografia/') . $materia['materia_id'] ?>">
-                                                        <i class="fas fa-book"></i> Bibliografía</a></li>
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li><a class="dropdown-item text-danger" href="#"
-                                                        onclick="confirmarEliminar(<?= $materia['materia_id'] ?>)">
-                                                        <i class="fas fa-trash"></i> Eliminar</a></li>
-                                            </ul>
-                                        </div>
-                                        <a title="Generar documento"
-                                            href="<?= base_url('materias/generar-word/') . $materia['materia_id'] ?>"
-                                            class="btn btn-sm btn-success">
-                                            <i class="fas fa-file-word"></i>
-                                        </a>
-                                    </div>
-                                </td>
-
-
+                                <th>#</th>
+                                <th>Materia</th>
+                                <th>Descripción</th>
+                                <th>Ciclo</th>
+                                <th class="text-nowrap">Acciones</th>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5" class="text-center">No hay documentos registrados.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-    </div>
-</div>
-
-
-
-<!-- Modal  crear-->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($materias)): ?>
+                                <?php foreach ($materias as $materia): ?>
+                                    <tr>
+                                        <td><?= esc($materia['materia_id']) ?></td>
+                                        <td><?= esc($materia['nombre']) ?></td>
+                                        <td>
+                                            <span class="truncate-hover"><?= esc($materia['descripcion']) ?></span>
+                                        </td>
+                                        <td><?= esc($materia['ciclo']) ?></td>
+                                        <td class="text-nowrap">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="dropdown dropstart">
+                                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
+                                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                                        Acciones
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                        </li>
+                                                        <li><a class="dropdown-item"
+                                                                href="<?= base_url('materias/objetivos/') . $materia['materia_id'] ?>">
+                                                                <i class="fas fa-bullseye"></i> Objetivos</a></li>
+                                                        <li><a class="dropdown-item"
+                                                                href="<?= base_url('materias/unidades/') . $materia['materia_id'] ?>">
+                                                                <i class="fas fa-layer-group"></i> Unidades</a></li>
+                                                        <li><a class="dropdown-item"
+                                                                href="<?= base_url('materias/bibliografia/') . $materia['materia_id'] ?>">
+                                                                <i class="fas fa-book"></i> Bibliografía</a></li>
+                                                        <li>
+                                                            <hr class="dropdown-divider">
+                                                        </li>
+                                                        <li><a class="dropdown-item text-danger" href="#"
+                                                                onclick="confirmarEliminar(<?= $materia['materia_id'] ?>)">
+                                                                <i class="fas fa-trash"></i> Eliminar</a></li>
+                                                    </ul>
+                                                </div>
+                                                        <a class="btn btn-sm btn-warning edit-btn" href="#"
+                                                                data-id="<?= $materia['materia_id'] ?>">
+                                                                <i class="fas fa-edit"></i></a>
+                                                <a title="Generar documento"
+                                                    href="<?= base_url('materias/generar-word/') . $materia['materia_id'] ?>"
+                                                    class="btn btn-sm btn-success">
+                                                    <i class="fas fa-file-word"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">No hay documentos registrados.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="modal-body">
-                <form action="<?= base_url("admin/users/create") ?>" method="POST" id="Create">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="name" name="name" required maxlength="100">
+        </div>
+    </div>
 
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" name="email" required maxlength="100">
-                    </div>
-                    <div class="mb-3 position-relative">
-                        <label for="Pass" class="form-label">Nueva Contraseña</label>
-                        <input type="password" class="form-control" id="Pass" name="password" required maxlength="255">
-                        <button type="button" class="btn btn-sm btn-outline-secondary toggle-password"
-                            data-target="#Pass" style="position: absolute; top: 35px; right: 10px;">
-                            <i class="fas fa-eye"></i>
-                        </button>
+    <!-- Card derecha (Formulario) -->
+    <div class="col-md-5">
+        <div class="card h-100 shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold" id="form-title">Nuevo Documento</h6>
+            </div>
+            <div class="card-body">
+                <form id="materiaForm" method="post">
+                    <?= csrf_field() ?>
+                    <input type="hidden" id="materia_id" name="materia_id" value="">
+
+                    <div class="row">
+                        <div class="col form-group mb-3">
+                            <label for="nombre">Nombre de la Materia</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+
+                        <div class="col form-group mb-3">
+                            <label for="ciclo">Ciclo</label>
+                            <input type="text" class="form-control" id="ciclo" name="ciclo">
+                        </div>
                     </div>
 
+                    <div class="form-group mb-3">
+                        <label for="descripcion">Descripción</label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="5"></textarea>
+                    </div>
+
+                    <div class="form-group text-right">
+                        <button type="button" id="cancel-btn" class="btn btn-secondary">Borrar</button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">Guardar</button>
+                    </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn btn-primary" form="Create">Crear Usuario</button>
-            </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Editar Usuario -->
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form id="editUserForm" method="POST" action="<?= base_url('admin/users/update') ?>">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Usuario</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="id" id="editUserId">
-                    <div class="mb-3">
-                        <label for="editUserName" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="editUserName" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editUserEmail" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="editUserEmail" name="email" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Eliminar Usuario -->
-<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form id="deleteUserForm" method="POST" action="<?= base_url('admin/users/delete') ?>">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Eliminación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar al usuario <strong id="deleteUserName"></strong>?</p>
-                    <input type="hidden" name="id" id="deleteUserId">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Restablecer Contraseña -->
-<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form id="resetPasswordForm" method="POST" action="<?= base_url('admin/users/reset-password') ?>">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Restablecer Contraseña</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="id" id="resetPasswordUserId">
-                    <p>Restablecer contraseña para: <strong id="resetPasswordUserName"></strong></p>
-                    <!-- Nueva Contraseña -->
-                    <div class="mb-3 position-relative">
-                        <label for="newPassword" class="form-label">Nueva Contraseña</label>
-                        <input type="password" class="form-control" id="newPassword" name="password" required
-                            maxlength="255">
-                        <button type="button" class="btn btn-sm btn-outline-secondary toggle-password"
-                            data-target="#newPassword" style="position: absolute; top: 35px; right: 10px;">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-
-                    <!-- Confirmar Contraseña -->
-                    <div class="mb-3 position-relative">
-                        <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirm_password"
-                            required maxlength="255">
-                        <div class="alert alert-danger" id="confirmPasswordError">Las contraseñas no coinciden.</div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary toggle-password"
-                            data-target="#confirmPassword" style="position: absolute; top: 35px; right: 10px;">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
 
 <?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
 <script>
+
+    $(document).ready(function () {
+
+        // Manejador para el botón de editar
+        $(document).on('click', '.edit-btn', function (e) {
+            e.preventDefault();
+            const materiaId = $(this).data('id');
+            cargarMateria(materiaId);
+        });
+
+        // Manejador para el botón de cancelar
+        $('#cancel-btn').click(function () {
+            resetForm();
+        });
+
+        // Manejador para el envío del formulario
+        $('#materiaForm').submit(function (e) {
+            e.preventDefault();
+
+            const materiaId = $('#materia_id').val();
+            const url = materiaId ? `${baseUrl}materias/actualizar/${materiaId}` : `${baseUrl}materias/guardar`;
+            const method = 'POST';
+
+            $.ajax({
+                url: url,
+                type: method,
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        showAlert('success', response.message || (materiaId ? 'Documento actualizado correctamente' : 'Documento creado correctamente'));
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        // Mostrar errores de validación si existen
+                        if (response.errors) {
+                            let errorMessages = '';
+                            for (const field in response.errors) {
+                                errorMessages += `${response.errors[field]}<br>`;
+                            }
+                            showAlert('error', errorMessages);
+                        } else {
+                            showAlert('error', response.message || 'Ocurrió un error inesperado');
+                        }
+                    }
+                },
+                error: function (xhr) {
+                    let errorMessage = 'Error en la solicitud';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showAlert('error', errorMessage);
+                }
+            });
+        });
+
+        // Función para cargar los datos de una materia
+        function cargarMateria(materiaId) {
+            $.get(`${baseUrl}materias/obtener/${materiaId}`, function (response) {
+                if (response.success && response.data) {
+                    const materia = response.data;
+                    $('#form-title').text('Editar Documento');
+                    $('#materia_id').val(materia.materia_id);
+                    $('#nombre').val(materia.nombre);
+                    $('#ciclo').val(materia.ciclo);
+                    $('#descripcion').val(materia.descripcion);
+                    $('#submit-btn').text('Actualizar');
+
+                    // Mostrar notificación de éxito
+                    showAlert('success', 'Datos cargados correctamente', 'top-end');
+                } else {
+                    showAlert('error', response.message || 'No se pudieron cargar los datos');
+                }
+            }).fail(function () {
+                showAlert('error', 'Error al cargar los datos');
+            });
+        }
+
+        // Función para resetear el formulario
+        function resetForm() {
+            $('#form-title').text('Nuevo Documento');
+            $('#materia_id').val('');
+            $('#materiaForm')[0].reset();
+            $('#submit-btn').text('Guardar');
+            showAlert('info', 'Formulario listo para crear un nuevo documento', 'top-end');
+        }
+
+        // Variable global para la URL base
+        const baseUrl = '<?= base_url() ?>';
+    });
+
     $(document).ready(function () {
         <?php if (!empty($materias)): ?>
             $('#materiasTable').DataTable({
                 language: {
-                    url: '<?=base_url("assets/js/spanishDatatables.json")?>'
+                    url: '<?= base_url("assets/js/spanishDatatables.json") ?>'
                 }
             });
         <?php else: ?>
